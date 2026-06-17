@@ -45,3 +45,6 @@ next-env.d.ts
 .mcp.json
 .playwright-mcp/
 skills-lock.json
+
+.vercel
+.env*.local

@@ -27,10 +27,21 @@ create table public.matches (
   home_score      integer,
   away_score      integer,
   group_name      text,
-  lock_at         timestamptz generated always as
-                    (kickoff_at - interval '30 minutes') stored,
+  lock_at         timestamptz,
   updated_at      timestamptz default now()
 );
+
+create or replace function public.set_lock_at()
+returns trigger as $$
+begin
+  new.lock_at := new.kickoff_at - interval '30 minutes';
+  return new;
+end;
+$$ language plpgsql immutable;
+
+create trigger trg_set_lock_at
+  before insert or update of kickoff_at on public.matches
+  for each row execute procedure public.set_lock_at();
 
 -- Predictions
 create table public.predictions (
