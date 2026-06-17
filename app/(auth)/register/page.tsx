@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 
 const INPUT_CLASS =
   'w-full bg-[#0d0d0d] border border-[#252525] rounded-xl px-4 py-3.5 ' +
-  'text-wc-light-gray placeholder-[#3d3d3d] text-sm font-body ' +
+  'text-base font-body text-wc-light-gray placeholder-[#3d3d3d] ' +
   'focus:outline-none transition-all duration-200 ' +
   'hover:border-[#333] ' +
   'focus:border-wc-red/50 focus:shadow-[0_0_0_1px_rgba(230,29,37,0.2),0_0_20px_rgba(230,29,37,0.08)]'
@@ -21,6 +21,11 @@ export default function RegisterPage() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
+    const trimmedName = displayName.trim()
+    if (!trimmedName) {
+      setError('Ange ett smeknamn')
+      return
+    }
     if (password.length < 6) {
       setError('Lösenordet måste vara minst 6 tecken')
       return
@@ -31,7 +36,7 @@ export default function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName } },
+      options: { data: { display_name: trimmedName } },
     })
     if (error) {
       setError('Något gick fel. Försök igen.')

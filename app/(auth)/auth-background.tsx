@@ -47,8 +47,9 @@ export function AuthBackground() {
         }}
       />
 
-      {/* World Cup Trophy — two-div structure: outer centers, inner sways */}
+      {/* World Cup Trophy — hidden on mobile, visible sm+ */}
       <div
+        className="hidden sm:block"
         style={{
           position: 'absolute',
           top: '1.5%',

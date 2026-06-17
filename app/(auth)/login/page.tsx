@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 
 const INPUT_CLASS =
   'w-full bg-[#0d0d0d] border border-[#252525] rounded-xl px-4 py-3.5 ' +
-  'text-wc-light-gray placeholder-[#3d3d3d] text-sm font-body ' +
+  'text-base font-body text-wc-light-gray placeholder-[#3d3d3d] ' +
   'focus:outline-none transition-all duration-200 ' +
   'hover:border-[#333] ' +
   'focus:border-wc-red/50 focus:shadow-[0_0_0_1px_rgba(230,29,37,0.2),0_0_20px_rgba(230,29,37,0.08)]'

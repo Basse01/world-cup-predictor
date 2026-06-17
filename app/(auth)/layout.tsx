@@ -2,14 +2,14 @@ import { AuthBackground } from './auth-background'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-wc-black flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-wc-black flex items-center justify-center px-4 py-8 relative overflow-hidden">
       <AuthBackground />
 
-      <div className="relative z-10 w-full max-w-[360px]">
+      <div className="relative z-10 w-full max-w-sm">
         {/* Title */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-5 sm:mb-8">
           <h1
-            className="font-display text-[5.5rem] leading-none text-wc-red"
+            className="font-display text-[3.4rem] sm:text-[5.5rem] leading-none text-wc-red"
             style={{ animation: 'stamp-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both' }}
           >
             VM 2026
@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           {/* Subtitle with flanking lines */}
           <div
-            className="flex items-center gap-3 mt-3"
+            className="flex items-center gap-3 mt-2 sm:mt-3"
             style={{ animation: 'fade-up 0.5s ease-out 0.45s both' }}
           >
             <div
@@ -36,12 +36,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Card */}
         <div
-          className="rounded-2xl p-7"
+          className="rounded-2xl p-5 sm:p-7"
           style={{
-            background: 'rgba(15, 15, 15, 0.85)',
+            background: 'rgba(15, 15, 15, 0.9)',
             border: '1px solid rgba(230, 29, 37, 0.12)',
             backdropFilter: 'blur(16px)',
-            boxShadow: '0 0 0 1px rgba(255,255,255,0.03), 0 30px 60px rgba(0,0,0,0.6), 0 0 80px rgba(230,29,37,0.06)',
+            boxShadow:
+              '0 0 0 1px rgba(255,255,255,0.03), 0 30px 60px rgba(0,0,0,0.6), 0 0 80px rgba(230,29,37,0.06)',
             animation: 'fade-up 0.5s ease-out 0.5s both',
           }}
         >
