@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     { data: standings },
     { data: myStanding },
   ] = await Promise.all([
-    supabase.from('profiles').select('display_name, paid').eq('id', user.id).single(),
+    supabase.from('profiles').select('display_name').eq('id', user.id).single(),
     supabase.from('matches').select('*').eq('status', 'scheduled')
       .order('kickoff_at').limit(3),
     supabase.from('standings').select('*').order('rank').limit(3),
@@ -27,9 +27,6 @@ export default async function DashboardPage() {
         <h1 className="font-display text-4xl text-wc-light-gray uppercase tracking-wide">
           Välkommen, {profile?.display_name}
         </h1>
-        {!profile?.paid && (
-          <p className="text-wc-red text-sm mt-1">⚠ Betalning ej registrerad — kontakta admin</p>
-        )}
       </div>
 
       {myStanding && (

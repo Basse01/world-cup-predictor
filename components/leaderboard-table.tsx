@@ -51,9 +51,6 @@ export default function LeaderboardTable({ initial }: { initial: Standing[] }) {
               </td>
               <td className="px-4 py-3">
                 <span className="text-wc-light-gray font-medium">{s.display_name}</span>
-                {!s.paid && (
-                  <span className="ml-2 text-xs text-wc-red">(ej betalt)</span>
-                )}
               </td>
               <td className="px-4 py-3 text-right font-display text-xl text-wc-light-gray">
                 {s.total_points}
