@@ -50,7 +50,7 @@ supabase/     # DB migrations
 
 | Table | Purpose |
 |---|---|
-| `profiles` | Extends auth.users — display_name, paid, is_admin |
+| `profiles` | Extends auth.users — display_name, paid (always true), is_admin |
 | `matches` | Fixtures from api-football.com — status, stage, scores, lock_at |
 | `predictions` | User picks — 1X2 for group, score+winner for knockout |
 | `bonus_predictions` | Answers to admin-created bonus questions |
@@ -114,6 +114,8 @@ CRON_SECRET                     # Bearer token for cron endpoint
 - Dark theme: `bg-[#1a1a1a]` cards, `border-[#2a2a2a]` borders
 - Custom colors: `wc-blue`, `wc-red`, `wc-green`, `wc-black`, `wc-dark-gray`, `wc-light-gray`
 - Fonts: Anton (headings), Noto Sans (body)
+
+**Betalning sker utanför appen** — `paid` defaultar till `true`, alla användare får full access direkt vid registrering. Admin-panelen har fortfarande en paid-toggle men den påverkar inget funktionellt.
 
 **Predictions lock 30 minutes before kickoff** — enforced by `matches.lock_at` (generated column: `kickoff_at - interval '30 minutes'`). Always check this server-side before accepting a prediction.
 
