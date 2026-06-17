@@ -72,6 +72,18 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes float-flag {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.22; }
+  92%  { opacity: 0.09; }
+  100% { transform: translateY(-110vh) rotate(540deg); opacity: 0; }
+}
+
+@keyframes trophy-sway {
+  0%, 100% { transform: translateX(-50%) rotate(-1.5deg) scale(1); }
+  50%       { transform: translateX(-50%) rotate(1.5deg) scale(1.03); }
+}
+
 body {
   background-color: #111111;
   color: #D1D4D1;
