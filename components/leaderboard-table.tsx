@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Standing } from '@/lib/types'
 
-export default function LeaderboardTable({ initial }: { initial: Standing[] }) {
+export default function LeaderboardTable({ initial, userId }: { initial: Standing[], userId?: string }) {
   const [standings, setStandings] = useState<Standing[]>(initial)
 
   useEffect(() => {
@@ -39,24 +39,32 @@ export default function LeaderboardTable({ initial }: { initial: Standing[] }) {
           </tr>
         </thead>
         <tbody>
-          {standings.map((s, i) => (
-            <tr
-              key={s.user_id}
-              className={`border-b border-[#1a1a1a] transition-colors ${
-                i === 0 ? 'bg-[#1a1f1a]' : 'bg-[#111] hover:bg-[#1a1a1a]'
-              }`}
-            >
-              <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-wc-dark-gray'}`}>
-                {s.rank}
-              </td>
-              <td className="px-4 py-3">
-                <span className="text-wc-light-gray font-medium">{s.display_name}</span>
-              </td>
-              <td className="px-4 py-3 text-right font-display text-xl text-wc-light-gray">
-                {s.total_points}
-              </td>
-            </tr>
-          ))}
+          {standings.map((s, i) => {
+            const isMe = userId && s.user_id === userId
+            return (
+              <tr
+                key={s.user_id}
+                className={`border-b border-[#1a1a1a] transition-colors ${
+                  isMe
+                    ? 'bg-wc-blue/10'
+                    : i === 0 ? 'bg-[#1a1f1a]' : 'bg-[#111] hover:bg-[#1a1a1a]'
+                }`}
+              >
+                <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-wc-dark-gray'}`}>
+                  {s.rank}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`font-medium ${isMe ? 'text-wc-blue' : 'text-wc-light-gray'}`}>
+                    {s.display_name}
+                    {isMe && <span className="text-xs ml-1.5 opacity-70">(du)</span>}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right font-display text-xl text-wc-light-gray">
+                  {s.total_points}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
       {standings.length === 0 && (

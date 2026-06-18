@@ -103,6 +103,51 @@ CRON_SECRET                     # Bearer token for cron endpoint
 
 ---
 
+## Mobile-First — Core Design Constraint
+
+**This app is primarily used on mobile phones.** Every component, layout, and interaction must work perfectly on a 390px screen before considering larger viewports. This is not optional.
+
+### Tailwind breakpoints
+- Write base styles for mobile (no prefix). Add `sm:`, `md:`, `lg:` only to _enhance_ larger screens.
+- Wrong: `hidden sm:block` as the primary layout — hide things from mobile only if they truly don't belong there.
+- Right: stack vertically on mobile, go side-by-side on `sm:`.
+
+### Navigation
+- **Bottom tab bar on mobile** — the top horizontal scroll nav is not acceptable on phones. On `sm:` and up, a top nav is fine.
+- The bottom bar must use `pb-safe` / `env(safe-area-inset-bottom)` to clear the iPhone home indicator.
+- Sticky bottom: `fixed bottom-0 left-0 right-0 z-50`.
+- Main content must add `pb-20` (or similar) so content is not hidden behind the bottom bar.
+
+### Touch targets
+- Every tappable element: minimum **44×44px** effective touch area (use `min-h-[44px] min-w-[44px]`).
+- Buttons in forms: `w-full` by default on mobile, constrained width on `sm:`.
+- Avoid tiny icon-only buttons without labels on mobile.
+
+### Typography & inputs
+- Body text: minimum `text-sm` (14px). Never smaller.
+- Form `<input>` and `<select>`: use `text-base` (16px) to prevent iOS auto-zoom on focus.
+- Headings can be large but use `clamp` or responsive sizes (`text-3xl sm:text-4xl`) to avoid overflow.
+
+### Spacing & layout
+- Horizontal padding: `px-4` as default (16px). Never less than `px-3`.
+- Cards and list items: `py-4` minimum so rows feel tappable.
+- Avoid multi-column grids on mobile — single column first, `grid-cols-2` at `sm:`.
+- Max width for content: `max-w-lg mx-auto` on pages with forms; `max-w-5xl` only for data-heavy views.
+
+### Scrolling & overflow
+- No horizontal overflow except intentional carousels (which must have `-webkit-overflow-scrolling: touch`).
+- Long lists: consider `max-h-[60vh] overflow-y-auto` instead of infinite page scroll.
+
+### Interactions
+- Never rely on hover states for functionality — always pair with `active:` or `focus:` equivalents.
+- Use `active:scale-95` or `active:opacity-80` for press feedback on buttons.
+
+### Safe area (notched phones)
+- Layouts that go edge-to-edge: add `pt-safe` / `pb-safe` using Tailwind's `env(safe-area-inset-*)`.
+- The bottom nav bar **must** account for home indicator: `pb-[env(safe-area-inset-bottom)]`.
+
+---
+
 ## Conventions
 
 **Data fetching:**

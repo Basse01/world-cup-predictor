@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import KnockoutCard from '@/components/knockout-card'
+import StageTabs from '@/components/stage-tabs'
 import type { Match, Prediction } from '@/lib/types'
 
 const KNOCKOUT_STAGES = ['round_of_16', 'quarter_final', 'semi_final', 'final']
@@ -36,28 +37,45 @@ export default async function SlutspelPage() {
     return acc
   }, {})
 
+  const availableStages = KNOCKOUT_STAGES.filter(s => grouped[s]?.length)
+
   return (
     <div>
-      <h1 className="font-display text-4xl text-wc-light-gray mb-6 uppercase tracking-wide">
+      <h1 className="font-display text-4xl text-wc-light-gray mb-4 uppercase tracking-wide">
         Slutspel
       </h1>
-      {KNOCKOUT_STAGES.filter(s => grouped[s]?.length).map(stage => (
-        <section key={stage} className="mb-8">
-          <h2 className="font-display text-xl text-wc-red mb-3 uppercase tracking-widest">
-            {STAGE_LABELS[stage]}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {grouped[stage].map(match => (
-              <KnockoutCard
-                key={match.id}
-                match={match as Match}
-                prediction={predMap.get(match.id) as Prediction | undefined}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-      {Object.keys(grouped).length === 0 && (
+
+      <StageTabs stages={availableStages} />
+
+      {availableStages.map(stage => {
+        const ms = grouped[stage]
+        const done = ms.filter(m => predMap.has(m.id)).length
+        return (
+          <section
+            key={stage}
+            id={`stage-${stage}`}
+            className="mb-10 scroll-mt-32"
+          >
+            <div className="flex items-baseline gap-3 mb-3">
+              <h2 className="font-display text-xl text-wc-red uppercase tracking-widest">
+                {STAGE_LABELS[stage]}
+              </h2>
+              <span className="text-xs text-wc-dark-gray">{done}/{ms.length} tips</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {ms.map(match => (
+                <KnockoutCard
+                  key={match.id}
+                  match={match as Match}
+                  prediction={predMap.get(match.id) as Prediction | undefined}
+                />
+              ))}
+            </div>
+          </section>
+        )
+      })}
+
+      {availableStages.length === 0 && (
         <p className="text-wc-dark-gray">Slutspelet är inte satt ännu.</p>
       )}
     </div>

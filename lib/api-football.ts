@@ -1,5 +1,5 @@
 const API_BASE = 'https://v3.football.api-sports.io'
-const WC_LEAGUE_ID = 1     // FIFA World Cup — verify with API if needed
+const WC_LEAGUE_ID = 1     // FIFA World Cup
 const WC_SEASON = 2026
 
 export interface ApiFixture {
@@ -19,7 +19,7 @@ export interface ApiFixture {
   }
 }
 
-async function apiFetch(endpoint: string): Promise<{ response: ApiFixture[] }> {
+async function apiFetch<T = { response: ApiFixture[] }>(endpoint: string): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY! },
     cache: 'no-store',
@@ -38,6 +38,50 @@ export async function fetchLiveFixtures(): Promise<ApiFixture[]> {
   return data.response
 }
 
+// Infers team_id -> group letter by analysing which teams play each other in group fixtures.
+// The standings API for WC 2026 mixes tournament and qualifying data, making it unreliable.
+// Fixture-based inference is always correct: teams that share a match must be in the same group.
+export function inferTeamGroupMap(groupFixtures: ApiFixture[]): Map<number, string> {
+  // Union-Find
+  const parent = new Map<number, number>()
+  const find = (x: number): number => {
+    if (!parent.has(x)) parent.set(x, x)
+    if (parent.get(x) !== x) parent.set(x, find(parent.get(x)!))
+    return parent.get(x)!
+  }
+  const union = (a: number, b: number) => {
+    const ra = find(a), rb = find(b)
+    if (ra !== rb) parent.set(ra, rb)
+  }
+
+  for (const f of groupFixtures) {
+    union(f.teams.home.id, f.teams.away.id)
+  }
+
+  // Group team IDs by their root
+  const clusters = new Map<number, number[]>()
+  const allTeamIds = new Set<number>()
+  for (const f of groupFixtures) {
+    allTeamIds.add(f.teams.home.id)
+    allTeamIds.add(f.teams.away.id)
+  }
+  for (const id of allTeamIds) {
+    const root = find(id)
+    if (!clusters.has(root)) clusters.set(root, [])
+    clusters.get(root)!.push(id)
+  }
+
+  // Sort clusters by minimum team ID (deterministic ordering), assign A, B, C, ...
+  const sorted = Array.from(clusters.values()).sort((a, b) => Math.min(...a) - Math.min(...b))
+  const letters = 'ABCDEFGHIJKL'
+  const map = new Map<number, string>()
+  sorted.forEach((teamIds, i) => {
+    const letter = letters[i] ?? String(i + 1)
+    for (const id of teamIds) map.set(id, letter)
+  })
+  return map
+}
+
 export function mapStatus(apiStatus: string): 'scheduled' | 'live' | 'finished' {
   const finished = ['FT', 'AET', 'PEN', 'AWD', 'WO']
   const live = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT', 'LIVE']
@@ -54,7 +98,3 @@ export function mapStage(round: string): 'group' | 'round_of_16' | 'quarter_fina
   return 'final'
 }
 
-export function extractGroupName(round: string): string | null {
-  const match = round.match(/Group\s+([A-Z])/i)
-  return match ? match[1].toUpperCase() : null
-}

@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   fetchAllFixtures,
+  inferTeamGroupMap,
   mapStatus,
   mapStage,
-  extractGroupName,
   type ApiFixture,
 } from '@/lib/api-football'
 
@@ -12,7 +12,6 @@ export const runtime = 'nodejs'
 export const maxDuration = 60
 
 export async function GET(request: Request) {
-  // Fix 1: Guard missing env vars before any logic
   if (!process.env.CRON_SECRET) {
     console.error('[sync-matches] CRON_SECRET env var not set')
     return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 })
@@ -29,7 +28,6 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient()
 
-  // Fix 2: Try/catch around fetchAllFixtures()
   let fixtures: ApiFixture[]
   try {
     fixtures = await fetchAllFixtures()
@@ -38,22 +36,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'upstream fetch failed' }, { status: 502 })
   }
 
-  // Fix 4: Move `updated_at` outside the map so all rows share the same timestamp
+  // Infer group assignments from fixture pairings (standings API mixes qualifying/tournament data)
+  const groupFixtures = fixtures.filter(f => mapStage(f.league.round) === 'group')
+  const teamGroupMap = inferTeamGroupMap(groupFixtures)
+
   const now = new Date().toISOString()
-  const matchesToUpsert = fixtures.map((f: ApiFixture) => ({
-    api_match_id: f.fixture.id,
-    home_team: f.teams.home.name,
-    away_team: f.teams.away.name,
-    home_team_logo: f.teams.home.logo,
-    away_team_logo: f.teams.away.logo,
-    kickoff_at: f.fixture.date,
-    status: mapStatus(f.fixture.status.short),
-    stage: mapStage(f.league.round),
-    home_score: f.score.fulltime.home ?? f.goals.home,
-    away_score: f.score.fulltime.away ?? f.goals.away,
-    group_name: extractGroupName(f.league.round),
-    updated_at: now,
-  }))
+  const matchesToUpsert = fixtures.map((f: ApiFixture) => {
+    const stage = mapStage(f.league.round)
+    const groupName = stage === 'group'
+      ? (teamGroupMap.get(f.teams.home.id) ?? teamGroupMap.get(f.teams.away.id) ?? null)
+      : null
+    return {
+      api_match_id: f.fixture.id,
+      home_team: f.teams.home.name,
+      away_team: f.teams.away.name,
+      home_team_logo: f.teams.home.logo,
+      away_team_logo: f.teams.away.logo,
+      kickoff_at: f.fixture.date,
+      status: mapStatus(f.fixture.status.short),
+      stage,
+      home_score: f.score.fulltime.home ?? f.goals.home,
+      away_score: f.score.fulltime.away ?? f.goals.away,
+      group_name: groupName,
+      updated_at: now,
+    }
+  })
 
   const { error: upsertError } = await supabase
     .from('matches')
@@ -68,7 +75,6 @@ export async function GET(request: Request) {
     .select('id')
     .eq('status', 'finished')
 
-  // Fix 3: Parallelize RPC calls with Promise.all and collect errors
   if (finishedMatches) {
     const rpcResults = await Promise.all(
       finishedMatches.map(match =>
@@ -85,6 +91,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     synced: matchesToUpsert.length,
+    groups_inferred: teamGroupMap.size,
     timestamp: new Date().toISOString(),
   })
 }

@@ -31,6 +31,11 @@ export default async function BonusPage() {
             existing={predMap.get(bt.type) as BonusPrediction | undefined}
           />
         ))}
+        {(bonusTypes ?? []).length === 0 && (
+          <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#2a2a2a] text-center">
+            <p className="text-wc-dark-gray text-sm">Bonusfrågor läggs till av admin inom kort.</p>
+          </div>
+        )}
       </div>
     </div>
   )
