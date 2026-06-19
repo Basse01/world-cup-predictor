@@ -66,3 +66,43 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const match_id = body.match_id as string | undefined
+  if (!match_id || typeof match_id !== 'string') {
+    return NextResponse.json({ error: 'match_id required' }, { status: 400 })
+  }
+
+  const { data: match } = await supabase
+    .from('matches')
+    .select('lock_at')
+    .eq('id', match_id)
+    .single()
+
+  if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 })
+
+  if (isMatchLocked(match.lock_at)) {
+    return NextResponse.json({ error: 'Prediction locked' }, { status: 403 })
+  }
+
+  const { error } = await supabase
+    .from('predictions')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('match_id', match_id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ ok: true })
+}

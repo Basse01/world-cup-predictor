@@ -25,17 +25,29 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
     if (locked || savingRef.current) return
     savingRef.current = true
     setSaving(true)
-    setPick(p)
-    const res = await fetch('/api/predictions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ match_id: match.id, pick: p }),
-    })
+
+    const isDeselect = pick === p
+    const prevPick = pick
+    setPick(isDeselect ? null : p)
+
+    const res = isDeselect
+      ? await fetch('/api/predictions', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ match_id: match.id }),
+        })
+      : await fetch('/api/predictions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ match_id: match.id, pick: p }),
+        })
+
     if (!res.ok) {
-      setPick(prediction?.pick ?? null)
+      setPick(prevPick)
       setShake(true)
       setTimeout(() => setShake(false), 400)
     }
+
     savingRef.current = false
     setSaving(false)
   }
