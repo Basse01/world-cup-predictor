@@ -1,5 +1,15 @@
 import type { Match } from '@/lib/types'
 
+function matchMinuteLabel(m: Match): string {
+  const s = m.api_status
+  if (s === 'HT') return 'Halvlek'
+  if (s === 'BT') return 'Paus (FT)'
+  if (s === 'ET') return `FT ${m.elapsed_minutes ?? ''}'`
+  if (s === 'P') return 'Straffar'
+  if (m.elapsed_minutes != null) return `${m.elapsed_minutes}'`
+  return ''
+}
+
 interface Props {
   matches: Match[]
 }
@@ -9,13 +19,15 @@ export default function LiveMatchBanner({ matches }: Props) {
 
   return (
     <div className="space-y-3">
-      {matches.map(m => (
+      {matches.map(m => {
+        const minuteLabel = matchMinuteLabel(m)
+        return (
         <div
           key={m.id}
           className="relative rounded-xl border border-wc-red bg-[#160808] overflow-hidden"
           style={{ animation: 'live-glow 1.8s ease-in-out infinite' }}
         >
-          {/* LIVE badge */}
+          {/* LIVE badge + minute */}
           <div className="absolute top-3 left-4 flex items-center gap-1.5">
             <span
               className="w-2 h-2 rounded-full bg-wc-red"
@@ -24,6 +36,11 @@ export default function LiveMatchBanner({ matches }: Props) {
             <span className="text-xs font-display text-wc-red tracking-[0.2em] uppercase">
               Live
             </span>
+            {minuteLabel && (
+              <span className="text-xs font-display text-wc-red/70 tracking-wide">
+                · {minuteLabel}
+              </span>
+            )}
           </div>
 
           {/* Match row */}
@@ -74,7 +91,8 @@ export default function LiveMatchBanner({ matches }: Props) {
             </div>
           </div>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

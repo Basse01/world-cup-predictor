@@ -17,6 +17,8 @@ export interface Match {
   away_score: number | null
   group_name: string | null
   lock_at: string
+  elapsed_minutes: number | null
+  api_status: string | null
 }
 
 export interface Prediction {

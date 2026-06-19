@@ -54,6 +54,8 @@ export async function GET(request: Request) {
       away_team_logo: f.teams.away.logo,
       kickoff_at: f.fixture.date,
       status: mapStatus(f.fixture.status.short),
+      api_status: f.fixture.status.short,
+      elapsed_minutes: f.fixture.status.elapsed ?? null,
       stage,
       home_score: f.score.fulltime.home ?? f.goals.home,
       away_score: f.score.fulltime.away ?? f.goals.away,
