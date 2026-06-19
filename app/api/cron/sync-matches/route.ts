@@ -118,7 +118,7 @@ export async function GET(request: Request) {
           if (match.status === 'live') {
             await supabase.from('match_events').delete().eq('match_id', match.id)
           }
-          await supabase.from('match_events').insert(
+          const { error: insertError } = await supabase.from('match_events').insert(
             events.map(e => ({
               match_id: match.id,
               elapsed: e.time.elapsed,
@@ -132,12 +132,14 @@ export async function GET(request: Request) {
               comments: e.comments ?? null,
             }))
           )
-        }
-        if (match.status === 'finished') {
-          await supabase
-            .from('matches')
-            .update({ events_synced_at: now })
-            .eq('id', match.id)
+          if (insertError) {
+            console.error(`[sync-matches] insert failed for match ${match.id}:`, insertError.message)
+          } else if (match.status === 'finished') {
+            // Only mark synced after a successful insert
+            await supabase.from('matches').update({ events_synced_at: now }).eq('id', match.id)
+          }
+        } else {
+          console.log(`[sync-matches] no events returned for fixture ${match.api_match_id} (match ${match.id}, status ${match.status})`)
         }
         eventsSynced++
       } catch (err) {

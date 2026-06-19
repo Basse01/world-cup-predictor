@@ -93,8 +93,13 @@ export interface ApiEvent {
 }
 
 export async function fetchFixtureEvents(fixtureId: number): Promise<ApiEvent[]> {
-  const data = await apiFetch<{ response: ApiEvent[] }>(`/fixtures/events?fixture=${fixtureId}`)
-  return data.response ?? []
+  const raw = await apiFetch<{ response: ApiEvent[] | null; errors: unknown }>(`/fixtures/events?fixture=${fixtureId}`)
+  if (raw.errors && typeof raw.errors === 'object' && Object.keys(raw.errors as object).length > 0) {
+    console.error(`[api-football] events errors for fixture ${fixtureId}:`, JSON.stringify(raw.errors))
+  }
+  const events = raw.response ?? []
+  console.log(`[api-football] fixture ${fixtureId}: ${events.length} events`)
+  return events
 }
 
 export function mapStatus(apiStatus: string): 'scheduled' | 'live' | 'finished' {
