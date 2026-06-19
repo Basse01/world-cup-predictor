@@ -65,7 +65,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
   if (!profile) notFound()
 
   const isMe = user.id === userId
-  const allPreds = (preds ?? []) as PredWithMatch[]
+  const allPreds = (preds ?? []) as unknown as PredWithMatch[]
   const totalPreds = allPreds.length
   const correctPreds = allPreds.filter(p => (p.points_awarded ?? 0) > 0).length
   const bonusPointsTotal = bonusPreds?.reduce((sum, b) => sum + (b.points_awarded ?? 0), 0) ?? 0
