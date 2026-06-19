@@ -1,25 +1,22 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import Nav from '@/components/nav'
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_admin, onboarding_completed')
+    .select('onboarding_completed')
     .eq('id', user.id)
     .single()
 
-  if (profile && !profile.onboarding_completed) redirect('/onboarding')
+  if (profile?.onboarding_completed) redirect('/dashboard')
 
   return (
-    <div className="min-h-screen">
-      <Nav isAdmin={profile?.is_admin ?? false} />
-      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 sm:pb-6">
+    <div className="min-h-screen bg-wc-black">
+      <main className="max-w-lg mx-auto px-4 py-10 pb-16">
         {children}
       </main>
     </div>

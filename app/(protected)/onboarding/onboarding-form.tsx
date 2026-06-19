@@ -6,7 +6,7 @@ const BONUS_TYPES = [
   {
     type: 'world_cup_winner',
     label: 'VM-vinnare',
-    points: 15,
+    points: null,
     placeholder: 'Vilket lag vinner VM 2026?',
     inputMode: 'text' as const,
     hint: null,
@@ -48,11 +48,13 @@ export default function OnboardingForm({ existing }: Props) {
   )
   const [saving, setSaving] = useState(false)
 
+  const allFilled = BONUS_TYPES.every(b => values[b.type].trim() !== '')
+
   async function handleSubmit() {
+    if (!allFilled || saving) return
     setSaving(true)
-    const filled = BONUS_TYPES.filter(b => values[b.type].trim())
     await Promise.all(
-      filled.map(b =>
+      BONUS_TYPES.map(b =>
         fetch('/api/bonus', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -60,23 +62,37 @@ export default function OnboardingForm({ existing }: Props) {
         })
       )
     )
+    await fetch('/api/complete-onboarding', { method: 'POST' })
     router.push('/dashboard')
     router.refresh()
   }
 
   return (
     <div className="space-y-4">
+      {/* Warning banner */}
+      <div
+        className="bg-[#1a1a0a] border border-wc-red/30 rounded-xl px-4 py-3"
+        style={{ animation: 'fade-up 0.4s ease-out 0.05s both' }}
+      >
+        <p className="text-wc-red text-xs font-display tracking-wide uppercase text-center">
+          Dessa val gör du en gång och går inte att ändra på!
+        </p>
+      </div>
+
+      {/* Bonus cards */}
       {BONUS_TYPES.map((bt, i) => (
         <div
           key={bt.type}
           className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a]"
-          style={{ animation: `fade-up 0.4s ease-out ${0.1 + i * 0.08}s both` }}
+          style={{ animation: `fade-up 0.4s ease-out ${0.15 + i * 0.08}s both` }}
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-display text-lg text-wc-light-gray uppercase tracking-wide">
               {bt.label}
             </h3>
-            <span className="text-xs font-display text-wc-green">+{bt.points}p</span>
+            {bt.points != null && (
+              <span className="text-xs font-display text-wc-green">+{bt.points}p</span>
+            )}
           </div>
 
           {bt.hint && (
@@ -100,19 +116,17 @@ export default function OnboardingForm({ existing }: Props) {
         </div>
       ))}
 
-      <div
-        className="flex flex-col gap-3 pt-2"
-        style={{ animation: 'fade-up 0.4s ease-out 0.45s both' }}
-      >
+      {/* Submit */}
+      <div style={{ animation: 'fade-up 0.4s ease-out 0.55s both' }} className="pt-2">
         <button
           onClick={handleSubmit}
-          disabled={saving}
+          disabled={!allFilled || saving}
           className="relative w-full overflow-hidden rounded-xl py-4 text-white font-display
                      tracking-[0.18em] text-base uppercase
                      transition-all duration-150
                      hover:scale-[1.02] hover:shadow-[0_8px_32px_rgba(230,29,37,0.45)]
                      active:scale-[0.98]
-                     disabled:opacity-50 disabled:cursor-not-allowed
+                     disabled:opacity-40 disabled:cursor-not-allowed
                      disabled:hover:scale-100 disabled:hover:shadow-none
                      group"
           style={{ background: 'linear-gradient(135deg, #E61D25 0%, #c4151c 100%)' }}
@@ -130,17 +144,9 @@ export default function OnboardingForm({ existing }: Props) {
                 Sparar...
               </>
             ) : (
-              'Spara och börja tippa'
+              'Lås in mina val'
             )}
           </span>
-        </button>
-
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="text-center text-wc-dark-gray text-sm hover:text-wc-light-gray
-                     transition-colors duration-150 py-2 min-h-[44px]"
-        >
-          Hoppa över för nu
         </button>
       </div>
     </div>

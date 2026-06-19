@@ -18,14 +18,14 @@ export default async function OnboardingPage() {
   const existing = Object.fromEntries((predictions ?? []).map(p => [p.type, p.value]))
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div>
       <div className="mb-8 text-center" style={{ animation: 'fade-up 0.4s ease-out 0s both' }}>
         <div className="text-5xl mb-4">🏆</div>
         <h1 className="font-display text-3xl sm:text-4xl text-wc-light-gray uppercase tracking-wide mb-2">
-          Bonus-förutsägelser
+          Innan vi kommer igång
         </h1>
         <p className="text-wc-dark-gray text-sm leading-relaxed">
-          Gissa rätt och tjäna extra poäng. Du kan ändra dina svar tills VM börjar.
+          Lås in dina bonusgissningar för chans till extra poäng
         </p>
       </div>
 
