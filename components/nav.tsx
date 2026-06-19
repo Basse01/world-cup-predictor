@@ -58,10 +58,21 @@ function ListIcon() {
   )
 }
 
-function ChatIcon() {
+function ChatIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function ChartIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+      <line x1="2" y1="20" x2="22" y2="20" />
     </svg>
   )
 }
@@ -90,7 +101,7 @@ const buildNavLinks = (userId: string) => [
   { href: '/tips/gruppspel', label: 'Grupp', Icon: GridIcon },
   { href: '/tips/slutspel', label: 'Slutspel', Icon: TrophyIcon },
   { href: '/leaderboard', label: 'Tabell', Icon: ListIcon },
-  { href: '/chat', label: 'Chatt', Icon: ChatIcon },
+  { href: '/stats', label: 'Stats', Icon: ChartIcon },
   { href: `/profile/${userId}`, label: 'Profil', Icon: UserIcon },
 ]
 
@@ -165,6 +176,17 @@ export default function Nav({ isAdmin, userId }: { isAdmin: boolean; userId: str
           <LogoutIcon />
         </button>
       </div>
+
+      {/* ── Floating chat bubble (all sizes, hidden on /chat) ───── */}
+      {pathname !== '/chat' && (
+        <Link
+          href="/chat"
+          aria-label="Öppna chatten"
+          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-wc-red rounded-full flex items-center justify-center shadow-2xl active:opacity-75 hover:bg-red-700 transition-colors text-white"
+        >
+          <ChatIcon size={24} />
+        </Link>
+      )}
 
       {/* ── Mobile: fixed bottom tab bar ────────────────────────── */}
       <nav
