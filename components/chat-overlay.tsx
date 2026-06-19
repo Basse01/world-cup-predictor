@@ -45,8 +45,8 @@ export default function ChatOverlay({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Panel — bottom sheet on mobile, centered modal on desktop */}
-      <div className="relative w-full max-w-lg sm:mx-4 bg-[#0d0d0d] rounded-t-2xl sm:rounded-2xl border border-[#2a2a2a] shadow-2xl flex flex-col h-[82vh] sm:h-[600px]">
+      {/* Panel — fullscreen */}
+      <div className="relative w-full h-full bg-[#0d0d0d] flex flex-col">
         <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#1a1a1a] flex-shrink-0">
           <h2 className="font-display text-2xl text-wc-light-gray uppercase tracking-wide">
             Chatt
