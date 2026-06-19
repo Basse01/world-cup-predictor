@@ -1,7 +1,9 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import ChatOverlay from '@/components/chat-overlay'
 
 function HomeIcon() {
   return (
@@ -105,9 +107,10 @@ const buildNavLinks = (userId: string) => [
   { href: `/profile/${userId}`, label: 'Profil', Icon: UserIcon },
 ]
 
-export default function Nav({ isAdmin, userId }: { isAdmin: boolean; userId: string }) {
+export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean; userId: string; displayName: string }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [chatOpen, setChatOpen] = useState(false)
 
   async function signOut() {
     const supabase = createClient()
@@ -177,15 +180,22 @@ export default function Nav({ isAdmin, userId }: { isAdmin: boolean; userId: str
         </button>
       </div>
 
-      {/* ── Floating chat bubble (all sizes, hidden on /chat) ───── */}
-      {pathname !== '/chat' && (
-        <Link
-          href="/chat"
-          aria-label="Öppna chatten"
-          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-wc-red rounded-full flex items-center justify-center shadow-2xl active:opacity-75 hover:bg-red-700 transition-colors text-white"
-        >
-          <ChatIcon size={24} />
-        </Link>
+      {/* ── Floating chat bubble ────────────────────────────────── */}
+      <button
+        onClick={() => setChatOpen(true)}
+        aria-label="Öppna chatten"
+        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-wc-red rounded-full flex items-center justify-center shadow-2xl active:opacity-75 hover:bg-red-700 transition-colors text-white"
+      >
+        <ChatIcon size={24} />
+      </button>
+
+      {/* ── Chat overlay ─────────────────────────────────────────── */}
+      {chatOpen && (
+        <ChatOverlay
+          onClose={() => setChatOpen(false)}
+          userId={userId}
+          displayName={displayName}
+        />
       )}
 
       {/* ── Mobile: fixed bottom tab bar ────────────────────────── */}

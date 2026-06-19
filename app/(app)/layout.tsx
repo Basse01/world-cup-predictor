@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_admin, onboarding_completed')
+    .select('is_admin, onboarding_completed, display_name')
     .eq('id', user.id)
     .single()
 
@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen">
-      <Nav isAdmin={profile?.is_admin ?? false} userId={user.id} />
+      <Nav isAdmin={profile?.is_admin ?? false} userId={user.id} displayName={profile?.display_name ?? ''} />
       <main className="max-w-5xl mx-auto px-4 py-6 pb-24 sm:pb-6">
         {children}
       </main>
