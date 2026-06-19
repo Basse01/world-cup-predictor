@@ -1,19 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import BonusForm from './bonus-form'
-import type { BonusType, BonusPrediction } from '@/lib/types'
+import type { BonusType, BonusPrediction, BonusOption } from '@/lib/types'
 
 export default async function BonusPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: bonusTypes }, { data: myPredictions }] = await Promise.all([
+  const [{ data: bonusTypes }, { data: myPredictions }, { data: bonusOptions }] = await Promise.all([
     supabase.from('bonus_types').select('*').order('type'),
     supabase.from('bonus_predictions').select('*').eq('user_id', user.id),
+    supabase.from('bonus_options').select('*').order('sort_order'),
   ])
 
   const predMap = new Map((myPredictions ?? []).map(p => [p.type, p]))
+
+  const optionsByType = new Map<string, BonusOption[]>()
+  for (const opt of (bonusOptions ?? []) as BonusOption[]) {
+    if (!optionsByType.has(opt.type)) optionsByType.set(opt.type, [])
+    optionsByType.get(opt.type)!.push(opt)
+  }
 
   return (
     <div>
@@ -29,6 +36,7 @@ export default async function BonusPage() {
             key={bt.type}
             bonusType={bt}
             existing={predMap.get(bt.type) as BonusPrediction | undefined}
+            options={optionsByType.get(bt.type)}
           />
         ))}
         {(bonusTypes ?? []).length === 0 && (

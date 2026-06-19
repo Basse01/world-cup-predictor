@@ -69,3 +69,11 @@ export interface BonusType {
   points: number
   locked_at: string | null
 }
+
+export interface BonusOption {
+  type: string
+  value: string
+  display_label: string
+  points: number
+  sort_order: number
+}

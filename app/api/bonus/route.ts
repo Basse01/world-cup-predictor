@@ -15,6 +15,7 @@ export async function POST(request: Request) {
 
   const type = body.type as string | undefined
   const value = (body.value as string | undefined)?.trim()
+  const lockedPoints = body.locked_points as number | undefined
 
   if (!type || !value) {
     return NextResponse.json({ error: 'type and value required' }, { status: 400 })
@@ -30,9 +31,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Bonus locked' }, { status: 403 })
   }
 
+  const row: Record<string, unknown> = { user_id: user.id, type, value }
+  if (lockedPoints != null) row.locked_points = lockedPoints
+
   const { error } = await supabase
     .from('bonus_predictions')
-    .upsert({ user_id: user.id, type, value }, { onConflict: 'user_id,type' })
+    .upsert(row, { onConflict: 'user_id,type' })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
