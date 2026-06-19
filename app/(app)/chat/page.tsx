@@ -18,10 +18,14 @@ export default async function ChatPage() {
   ])
 
   return (
-    <div>
-      <h1 className="font-display text-4xl text-wc-light-gray mb-4 uppercase tracking-wide">
-        Chatt
-      </h1>
+    // Escape layout padding so chat fills exactly between the two nav bars.
+    // dvh (dynamic viewport height) shrinks when the iOS keyboard opens.
+    <div className="-mx-4 -mt-6 -mb-24 sm:-mb-6 flex flex-col h-[calc(100dvh-140px)] sm:h-[calc(100dvh-56px)]">
+      <div className="px-4 pt-5 pb-3 border-b border-[#1a1a1a] flex-shrink-0">
+        <h1 className="font-display text-3xl text-wc-light-gray uppercase tracking-wide">
+          Chatt
+        </h1>
+      </div>
       <ChatWindow
         initial={(messages ?? []) as Message[]}
         userId={user.id}

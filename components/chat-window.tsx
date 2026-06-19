@@ -17,10 +17,29 @@ export default function ChatWindow({
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const isInitial = useRef(true)
+
+  // Cache display names so each unique user only causes one extra fetch
+  const profileCache = useRef<Map<string, string>>(new Map(
+    initial
+      .filter(m => m.profiles?.display_name)
+      .map(m => [m.user_id, m.profiles.display_name])
+  ))
+
+  // IDs of messages we already added optimistically — skip them in realtime
+  const pendingIds = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const el = scrollRef.current
+    if (!el) return
+    if (isInitial.current) {
+      el.scrollTop = el.scrollHeight
+      isInitial.current = false
+      return
+    }
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    if (distFromBottom < 150) el.scrollTop = el.scrollHeight
   }, [messages])
 
   useEffect(() => {
@@ -30,18 +49,37 @@ export default function ChatWindow({
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
         async (payload) => {
-          const { data } = await supabase
-            .from('messages')
-            .select('*, profiles(display_name)')
-            .eq('id', payload.new.id)
-            .single()
-          if (data) setMessages(prev => [...prev, data as Message])
+          const msgId = payload.new.id as string
+
+          // Skip messages we already showed optimistically
+          if (pendingIds.current.has(msgId)) {
+            pendingIds.current.delete(msgId)
+            return
+          }
+
+          const newUserId = payload.new.user_id as string
+          let name = profileCache.current.get(newUserId)
+
+          if (!name) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('display_name')
+              .eq('id', newUserId)
+              .single()
+            name = data?.display_name ?? ''
+            if (name) profileCache.current.set(newUserId, name)
+          }
+
+          setMessages(prev => [...prev, {
+            ...(payload.new as Message),
+            profiles: { display_name: name ?? '' },
+          }])
         }
       )
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [supabase])
+  }, [supabase, userId, displayName])
 
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault()
@@ -49,19 +87,47 @@ export default function ChatWindow({
     setSendError(null)
     setSending(true)
     const trimmed = input.trim()
-    const { error } = await supabase.from('messages').insert({ user_id: userId, content: trimmed })
+
+    // Optimistic: show message immediately
+    const optimisticId = `opt-${Date.now()}`
+    const optimisticMsg: Message = {
+      id: optimisticId,
+      user_id: userId,
+      content: trimmed,
+      created_at: new Date().toISOString(),
+      profiles: { display_name: displayName },
+    }
+    setMessages(prev => [...prev, optimisticMsg])
+    setInput('')
+
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({ user_id: userId, content: trimmed })
+      .select('id')
+      .single()
+
     if (error) {
+      setMessages(prev => prev.filter(m => m.id !== optimisticId))
       setInput(trimmed)
       setSendError('Kunde inte skicka meddelandet. Försök igen.')
-    } else {
-      setInput('')
+      setSending(false)
+      return
     }
+
+    if (data?.id) {
+      // Mark real ID so realtime skips it, then swap optimistic placeholder
+      pendingIds.current.add(data.id)
+      setMessages(prev => prev.map(m =>
+        m.id === optimisticId ? { ...m, id: data.id } : m
+      ))
+    }
+
     setSending(false)
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)]">
-      <div className="flex-1 overflow-y-auto space-y-3 pb-4">
+    <div className="flex flex-col flex-1 min-h-0 px-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 py-4">
         {messages.map(m => {
           const isMe = m.user_id === userId
           const time = new Date(m.created_at).toLocaleTimeString('sv-SE', {
@@ -70,13 +136,11 @@ export default function ChatWindow({
           return (
             <div
               key={m.id}
-              className={`animate-slide-in flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
             >
-              {!isMe && (
-                <span className="text-xs text-wc-dark-gray mb-1 px-1">
-                  {m.profiles?.display_name}
-                </span>
-              )}
+              <span className="text-xs text-wc-dark-gray mb-1 px-1">
+                {m.profiles?.display_name}
+              </span>
               <div
                 className={`max-w-xs rounded-2xl px-4 py-2.5 text-sm
                   ${isMe
@@ -90,13 +154,16 @@ export default function ChatWindow({
             </div>
           )
         })}
-        <div ref={bottomRef} />
       </div>
 
       {sendError && (
         <p className="text-xs text-wc-red pb-1">{sendError}</p>
       )}
-      <form onSubmit={sendMessage} className="flex gap-2 pt-3 border-t border-[#2a2a2a]">
+      <form
+        onSubmit={sendMessage}
+        className="flex gap-2 pt-3 border-t border-[#2a2a2a]"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+      >
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -104,7 +171,7 @@ export default function ChatWindow({
           maxLength={500}
           className="flex-1 bg-[#1a1a1a] border border-wc-dark-gray rounded-xl px-4 py-2.5
                      text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
-                     focus:border-wc-blue text-sm"
+                     focus:border-wc-blue text-base"
         />
         <button
           type="submit"

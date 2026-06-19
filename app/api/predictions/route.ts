@@ -102,7 +102,10 @@ export async function DELETE(request: Request) {
     .eq('user_id', user.id)
     .eq('match_id', match_id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[predictions DELETE] supabase error:', JSON.stringify(error))
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }
