@@ -100,12 +100,12 @@ export async function GET(request: Request) {
       .eq('status', 'finished')
       .is('events_synced_at', null)
       .order('kickoff_at', { ascending: false })
-      .limit(6),
+      .limit(50),
   ])
   const matchesNeedingEvents = [
     ...(liveForEvents ?? []),
     ...(unsyncedFinished ?? []),
-  ].slice(0, 8)
+  ].slice(0, 50)
 
   let eventsSynced = 0
   if (matchesNeedingEvents) {
