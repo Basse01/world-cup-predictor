@@ -52,11 +52,16 @@ export default async function SlutspelPage() {
           </span>
         )}
       </div>
-      <p className="text-sm text-wc-dark-gray mb-6">
-        {totalKnockout === 0
-          ? 'Bracketen fylls i när slutspelet börjar'
-          : 'Klicka på en match för att lägga ditt tips'}
-      </p>
+      {totalKnockout === 0 ? (
+        <div className="inline-flex items-center gap-2 bg-wc-blue/10 border border-wc-blue/30 text-wc-blue text-sm font-medium px-4 py-2 rounded-full mb-6">
+          <span className="inline-block w-2 h-2 rounded-full bg-wc-blue animate-pulse" />
+          Kommer snart
+        </div>
+      ) : (
+        <p className="text-sm text-wc-dark-gray mb-6">
+          Klicka på en match för att lägga ditt tips
+        </p>
+      )}
 
       <TournamentBracket matches={bracketMatches} predMap={allPreds} />
 
