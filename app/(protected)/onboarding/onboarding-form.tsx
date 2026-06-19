@@ -1,30 +1,41 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import SearchSelect from '@/components/search-select'
+import { WC_TEAMS, WC_PLAYERS } from '@/lib/onboarding-data'
 
-const BONUS_TYPES = [
+type FieldType = 'teams' | 'players' | 'number'
+
+const BONUS_TYPES: {
+  type: string
+  label: string
+  points: number | null
+  placeholder: string
+  fieldType: FieldType
+  hint: string | null
+}[] = [
   {
     type: 'world_cup_winner',
     label: 'VM-vinnare',
     points: null,
-    placeholder: 'Vilket lag vinner VM 2026?',
-    inputMode: 'text' as const,
+    placeholder: 'Sök eller välj lag...',
+    fieldType: 'teams',
     hint: null,
   },
   {
     type: 'golden_ball',
-    label: 'Golden Ball',
+    label: 'Bästa spelare (Golden Ball)',
     points: 10,
-    placeholder: 'Turneringens bästa spelare...',
-    inputMode: 'text' as const,
+    placeholder: 'Sök eller välj spelare...',
+    fieldType: 'players',
     hint: null,
   },
   {
     type: 'top_scorer',
     label: 'Skyttekung (Golden Boot)',
     points: 10,
-    placeholder: 'Turneringens bästa målskytt...',
-    inputMode: 'text' as const,
+    placeholder: 'Sök eller välj spelare...',
+    fieldType: 'players',
     hint: null,
   },
   {
@@ -32,10 +43,10 @@ const BONUS_TYPES = [
     label: 'Antal mål i VM',
     points: 10,
     placeholder: 'Ditt tips...',
-    inputMode: 'numeric' as const,
+    fieldType: 'number',
     hint: 'VM 2022 hade 172 mål på 64 matcher. VM 2026 spelas på 104 matcher — vad tror du?',
   },
-] as const
+]
 
 interface Props {
   existing: Record<string, string>
@@ -49,6 +60,10 @@ export default function OnboardingForm({ existing }: Props) {
   const [saving, setSaving] = useState(false)
 
   const allFilled = BONUS_TYPES.every(b => values[b.type].trim() !== '')
+
+  function set(type: string, val: string) {
+    setValues(v => ({ ...v, [type]: val }))
+  }
 
   async function handleSubmit() {
     if (!allFilled || saving) return
@@ -101,18 +116,38 @@ export default function OnboardingForm({ existing }: Props) {
             </div>
           )}
 
-          <input
-            type={bt.inputMode === 'numeric' ? 'number' : 'text'}
-            inputMode={bt.inputMode}
-            min={bt.inputMode === 'numeric' ? 0 : undefined}
-            max={bt.inputMode === 'numeric' ? 700 : undefined}
-            value={values[bt.type]}
-            onChange={e => setValues(v => ({ ...v, [bt.type]: e.target.value }))}
-            placeholder={bt.placeholder}
-            className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
-                       text-base text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
-                       focus:border-wc-blue"
-          />
+          {bt.fieldType === 'teams' && (
+            <SearchSelect
+              options={WC_TEAMS}
+              value={values[bt.type]}
+              onChange={val => set(bt.type, val)}
+              placeholder={bt.placeholder}
+            />
+          )}
+
+          {bt.fieldType === 'players' && (
+            <SearchSelect
+              options={WC_PLAYERS}
+              value={values[bt.type]}
+              onChange={val => set(bt.type, val)}
+              placeholder={bt.placeholder}
+            />
+          )}
+
+          {bt.fieldType === 'number' && (
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={700}
+              value={values[bt.type]}
+              onChange={e => set(bt.type, e.target.value)}
+              placeholder={bt.placeholder}
+              className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
+                         text-base text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
+                         focus:border-wc-blue"
+            />
+          )}
         </div>
       ))}
 
