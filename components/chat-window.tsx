@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Message } from '@/lib/types'
 
@@ -138,9 +139,22 @@ export default function ChatWindow({
               key={m.id}
               className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
             >
-              <span className="text-xs text-wc-dark-gray mb-1 px-1">
-                {m.profiles?.display_name}
-              </span>
+              <Link
+                href={`/profile/${m.user_id}`}
+                className={`flex items-center gap-1.5 mb-1 px-1 group ${isMe ? 'flex-row-reverse' : ''}`}
+              >
+                {/* Avatar circle */}
+                <span
+                  className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-display font-bold
+                    ${isMe ? 'bg-wc-blue/30 text-wc-blue' : 'bg-[#2a2a2a] text-wc-dark-gray'}
+                    group-hover:opacity-80 transition-opacity`}
+                >
+                  {(m.profiles?.display_name?.[0] ?? '?').toUpperCase()}
+                </span>
+                <span className="text-xs text-wc-dark-gray group-hover:text-wc-light-gray transition-colors">
+                  {m.profiles?.display_name}
+                </span>
+              </Link>
               <div
                 className={`max-w-xs rounded-2xl px-4 py-2.5 text-sm
                   ${isMe

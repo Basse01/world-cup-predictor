@@ -12,6 +12,45 @@ function fmt(iso: string) {
   )
 }
 
+interface TeamRow {
+  team: string
+  logo: string | null
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  gf: number
+  ga: number
+  gd: number
+  pts: number
+}
+
+function computeGroupStandings(matches: Match[]): TeamRow[] {
+  const map = new Map<string, TeamRow>()
+
+  for (const m of matches) {
+    if (!map.has(m.home_team))
+      map.set(m.home_team, { team: m.home_team, logo: m.home_team_logo, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, pts: 0 })
+    if (!map.has(m.away_team))
+      map.set(m.away_team, { team: m.away_team, logo: m.away_team_logo, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, pts: 0 })
+
+    if (m.status === 'finished' && m.home_score != null && m.away_score != null) {
+      const h = map.get(m.home_team)!
+      const a = map.get(m.away_team)!
+      h.played++; a.played++
+      h.gf += m.home_score; h.ga += m.away_score
+      a.gf += m.away_score; a.ga += m.home_score
+      if (m.home_score > m.away_score) { h.won++; h.pts += 3; a.lost++ }
+      else if (m.home_score < m.away_score) { a.won++; a.pts += 3; h.lost++ }
+      else { h.drawn++; h.pts += 1; a.drawn++; a.pts += 1 }
+    }
+  }
+
+  return Array.from(map.values())
+    .map(t => ({ ...t, gd: t.gf - t.ga }))
+    .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.team.localeCompare(b.team))
+}
+
 export default async function GruppspelPage() {
   const supabase = await createClient()
   const {
@@ -146,45 +185,82 @@ export default async function GruppspelPage() {
             const ms = grouped[group]
             const done = ms.filter((m) => predMap.has(m.id)).length
             const total = ms.length
-            const teams = Array.from(new Set(ms.flatMap((m) => [m.home_team, m.away_team])))
             const allDone = done === total
             const noneDone = done === 0
+            const standings = computeGroupStandings(ms)
+            const hasPlayed = standings.some(t => t.played > 0)
 
             return (
               <Link
                 key={group}
                 href={`/tips/gruppspel/${group}`}
-                className={`bg-[#1a1a1a] rounded-xl p-4 border transition-colors hover:border-wc-blue active:scale-[0.98] ${
+                className={`bg-[#1a1a1a] rounded-xl p-3.5 border transition-colors hover:border-wc-blue/60 active:scale-[0.98] block ${
                   allDone
                     ? 'border-wc-green/40'
                     : noneDone
-                      ? 'border-wc-red/30'
+                      ? 'border-wc-red/20'
                       : 'border-[#2a2a2a]'
                 }`}
               >
+                {/* Card header */}
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-display text-wc-blue text-xl tracking-widest">
-                    {group}
+                    Grupp {group}
                   </span>
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      allDone
-                        ? 'bg-wc-green/10 text-wc-green'
-                        : noneDone
-                          ? 'bg-wc-red/10 text-wc-red'
-                          : 'bg-[#2a2a2a] text-wc-dark-gray'
-                    }`}
-                  >
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    allDone
+                      ? 'bg-wc-green/10 text-wc-green'
+                      : noneDone
+                        ? 'bg-wc-red/10 text-wc-red'
+                        : 'bg-[#252525] text-wc-dark-gray'
+                  }`}>
                     {done}/{total}
                   </span>
                 </div>
-                <ul className="space-y-1">
-                  {teams.slice(0, 4).map((team) => (
-                    <li key={team} className="text-xs text-wc-light-gray truncate leading-relaxed">
-                      {team}
-                    </li>
-                  ))}
-                </ul>
+
+                {hasPlayed ? (
+                  /* Mini standings table */
+                  <div className="space-y-[5px]">
+                    {standings.map((t, i) => (
+                      <div
+                        key={t.team}
+                        className={`flex items-center gap-1.5 text-[11px] ${
+                          i < 2 ? 'text-wc-light-gray' : 'text-[#484848]'
+                        }`}
+                      >
+                        <span className="w-3 text-center opacity-40 font-display leading-none">{i + 1}</span>
+                        {t.logo ? (
+                          <img src={t.logo} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+                        ) : (
+                          <span className="w-4 h-4 flex-shrink-0" />
+                        )}
+                        <span className="flex-1 truncate leading-none">{t.team}</span>
+                        <span className={`w-7 text-right font-display leading-none text-[10px] ${
+                          t.gd > 0 ? 'text-wc-green' : t.gd < 0 ? 'text-wc-red/70' : 'text-[#484848]'
+                        }`}>
+                          {t.gd > 0 ? `+${t.gd}` : t.gd}
+                        </span>
+                        <span className={`w-5 text-right font-display leading-none font-bold ${
+                          i < 2 ? 'text-wc-light-gray' : 'text-[#484848]'
+                        }`}>{t.pts}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Logo + name grid (no matches played yet) */
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+                    {standings.map((t) => (
+                      <div key={t.team} className="flex items-center gap-1.5 min-w-0">
+                        {t.logo ? (
+                          <img src={t.logo} alt="" className="w-4 h-4 object-contain flex-shrink-0" />
+                        ) : (
+                          <span className="w-4 h-4 rounded-full bg-[#2a2a2a] flex-shrink-0" />
+                        )}
+                        <span className="text-[11px] text-wc-light-gray truncate">{t.team}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Link>
             )
           })}

@@ -82,6 +82,21 @@ export function inferTeamGroupMap(groupFixtures: ApiFixture[]): Map<number, stri
   return map
 }
 
+export interface ApiEvent {
+  time: { elapsed: number; extra: number | null }
+  team: { id: number; name: string; logo: string }
+  player: { id: number | null; name: string | null }
+  assist: { id: number | null; name: string | null }
+  type: string
+  detail: string
+  comments: string | null
+}
+
+export async function fetchFixtureEvents(fixtureId: number): Promise<ApiEvent[]> {
+  const data = await apiFetch<{ response: ApiEvent[] }>(`/fixtures/events?fixture=${fixtureId}`)
+  return data.response ?? []
+}
+
 export function mapStatus(apiStatus: string): 'scheduled' | 'live' | 'finished' {
   const finished = ['FT', 'AET', 'PEN', 'AWD', 'WO']
   const live = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'INT', 'LIVE']

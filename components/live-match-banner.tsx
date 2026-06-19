@@ -1,4 +1,5 @@
-import type { Match } from '@/lib/types'
+import Link from 'next/link'
+import type { Match, MatchEvent } from '@/lib/types'
 
 function matchMinuteLabel(m: Match): string {
   const s = m.api_status
@@ -10,20 +11,46 @@ function matchMinuteLabel(m: Match): string {
   return ''
 }
 
-interface Props {
-  matches: Match[]
+const EVENT_ICON: Record<string, string> = {
+  'Normal Goal':    '⚽',
+  'Penalty':        '⚽',
+  'Own Goal':       '⚽',
+  'Missed Penalty': '❌',
+  'Yellow Card':    '🟨',
+  'Red Card':       '🟥',
+  'Yellow Red Card':'🟥',
 }
 
-export default function LiveMatchBanner({ matches }: Props) {
+function recentEventLine(e: MatchEvent): string {
+  const min = e.extra_time ? `${e.elapsed}+${e.extra_time}'` : `${e.elapsed}'`
+  const ico = e.type === 'subst' ? '🔄' : e.type === 'Var' ? '📺' : (EVENT_ICON[e.detail ?? ''] ?? '•')
+  if (e.type === 'subst') return `${min}  ${ico}  ${e.player_name ?? ''}`
+  return `${min}  ${ico}  ${e.player_name ?? e.detail ?? ''}`
+}
+
+interface Props {
+  matches: Match[]
+  events?: Record<string, MatchEvent[]>
+}
+
+export default function LiveMatchBanner({ matches, events = {} }: Props) {
   if (matches.length === 0) return null
 
   return (
     <div className="space-y-3">
       {matches.map(m => {
         const minuteLabel = matchMinuteLabel(m)
+        const matchEvents = (events[m.id] ?? [])
+          .filter((e: MatchEvent) => e.type !== 'subst' && e.type !== 'Var')
+          .slice(-4)
+          .reverse()
         return (
-        <div
+        <Link
           key={m.id}
+          href={`/match/${m.id}`}
+          className="block"
+        >
+        <div
           className="relative rounded-xl border border-wc-red bg-[#160808] overflow-hidden"
           style={{ animation: 'live-glow 1.8s ease-in-out infinite' }}
         >
@@ -90,7 +117,19 @@ export default function LiveMatchBanner({ matches }: Props) {
               </span>
             </div>
           </div>
+
+          {/* Recent events */}
+          {matchEvents.length > 0 && (
+            <div className="border-t border-wc-red/20 px-5 py-3 space-y-1.5">
+              {matchEvents.map((e: MatchEvent, i: number) => (
+                <p key={i} className="text-xs text-wc-dark-gray">
+                  {recentEventLine(e)}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
+        </Link>
         )
       })}
     </div>

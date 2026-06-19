@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   fetchAllFixtures,
+  fetchFixtureEvents,
   inferTeamGroupMap,
   mapStatus,
   mapStage,
@@ -91,9 +92,59 @@ export async function GET(request: Request) {
     }
   }
 
+  // ── Sync match events ──────────────────────────────────────────────────────
+  // Always re-sync live matches. For finished matches, sync once (events_synced_at IS NULL),
+  // limit 8 per cron run to stay within API rate limits.
+  const { data: matchesNeedingEvents } = await supabase
+    .from('matches')
+    .select('id, api_match_id, status')
+    .or('status.eq.live,and(status.eq.finished,events_synced_at.is.null)')
+    .order('kickoff_at', { ascending: false })
+    .limit(8)
+
+  let eventsSynced = 0
+  if (matchesNeedingEvents) {
+    for (const match of matchesNeedingEvents) {
+      try {
+        const events = await fetchFixtureEvents(match.api_match_id)
+        if (events.length > 0) {
+          // For live matches: delete + re-insert so removed events (VAR overturns) disappear.
+          // For finished matches: only ever run once, insert is safe.
+          if (match.status === 'live') {
+            await supabase.from('match_events').delete().eq('match_id', match.id)
+          }
+          await supabase.from('match_events').insert(
+            events.map(e => ({
+              match_id: match.id,
+              elapsed: e.time.elapsed,
+              extra_time: e.time.extra ?? null,
+              team_name: e.team.name,
+              team_logo: e.team.logo ?? null,
+              player_name: e.player.name ?? null,
+              assist_name: e.assist.name ?? null,
+              type: e.type,
+              detail: e.detail ?? null,
+              comments: e.comments ?? null,
+            }))
+          )
+        }
+        if (match.status === 'finished') {
+          await supabase
+            .from('matches')
+            .update({ events_synced_at: now })
+            .eq('id', match.id)
+        }
+        eventsSynced++
+      } catch (err) {
+        console.error(`[sync-matches] events fetch failed for match ${match.id}:`, err)
+      }
+    }
+  }
+
   return NextResponse.json({
     synced: matchesToUpsert.length,
     groups_inferred: teamGroupMap.size,
+    events_synced: eventsSynced,
     timestamp: new Date().toISOString(),
   })
 }

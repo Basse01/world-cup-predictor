@@ -72,6 +72,20 @@ export interface BonusType {
   locked_at: string | null
 }
 
+export interface MatchEvent {
+  id: number
+  match_id: string
+  elapsed: number
+  extra_time: number | null
+  team_name: string
+  team_logo: string | null
+  player_name: string | null
+  assist_name: string | null
+  type: string
+  detail: string | null
+  comments: string | null
+}
+
 export interface BonusOption {
   type: string
   value: string

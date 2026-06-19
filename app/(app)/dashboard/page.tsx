@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import type { Match, Standing } from '@/lib/types'
+import type { Match, MatchEvent, Standing } from '@/lib/types'
 import LiveMatchBanner from '@/components/live-match-banner'
 
 const KNOCKOUT_STAGES = ['round_of_16', 'quarter_final', 'semi_final', 'final']
@@ -37,6 +37,18 @@ export default async function DashboardPage() {
     supabase.from('predictions').select('match_id, points_awarded').eq('user_id', user.id),
   ])
 
+  // Fetch events for live matches (separate query since IDs needed first)
+  const liveMatchIds = (liveMatches ?? []).map(m => m.id)
+  const { data: liveEventsRaw } = liveMatchIds.length > 0
+    ? await supabase.from('match_events').select('*').in('match_id', liveMatchIds)
+    : { data: [] }
+
+  const eventsByMatch: Record<string, MatchEvent[]> = {}
+  for (const e of (liveEventsRaw ?? []) as MatchEvent[]) {
+    if (!eventsByMatch[e.match_id]) eventsByMatch[e.match_id] = []
+    eventsByMatch[e.match_id].push(e)
+  }
+
   const myPredSet = new Set(myPredictions?.map(p => p.match_id) ?? [])
   const groupTotal = groupMatchIds?.length ?? 0
   const groupDone = groupMatchIds?.filter(m => myPredSet.has(m.id)).length ?? 0
@@ -55,7 +67,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <LiveMatchBanner matches={(liveMatches ?? []) as Match[]} />
+      <LiveMatchBanner matches={(liveMatches ?? []) as Match[]} events={eventsByMatch} />
 
       {myStanding ? (
         <div className="bg-[#1a1a1a] rounded-xl p-5 border border-wc-blue/30 flex justify-between items-center">
@@ -138,7 +150,11 @@ export default async function DashboardPage() {
             {(recentMatches ?? []).map(m => {
               const pred = predByMatch.get(m.id)
               return (
-                <div key={m.id} className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex justify-between items-center">
+                <Link
+                  key={m.id}
+                  href={`/match/${m.id}`}
+                  className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex justify-between items-center hover:bg-[#222] transition-colors"
+                >
                   <span className="text-wc-light-gray text-sm">
                     {m.home_team}{' '}
                     <span className="font-display text-wc-dark-gray">{m.home_score}–{m.away_score}</span>{' '}
@@ -151,7 +167,7 @@ export default async function DashboardPage() {
                   ) : (
                     <span className="text-xs text-wc-dark-gray">(inget tips)</span>
                   )}
-                </div>
+                </Link>
               )
             })}
           </div>
