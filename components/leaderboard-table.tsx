@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Standing } from '@/lib/types'
 
@@ -46,18 +47,21 @@ export default function LeaderboardTable({ initial, userId }: { initial: Standin
                 key={s.user_id}
                 className={`border-b border-[#1a1a1a] transition-colors ${
                   isMe
-                    ? 'bg-wc-blue/10'
-                    : i === 0 ? 'bg-[#1a1f1a]' : 'bg-[#111] hover:bg-[#1a1a1a]'
+                    ? 'bg-wc-blue/10 hover:bg-wc-blue/15'
+                    : i === 0 ? 'bg-[#1a1f1a] hover:bg-[#1e231e]' : 'bg-[#111] hover:bg-[#1a1a1a]'
                 }`}
               >
                 <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-wc-dark-gray'}`}>
                   {s.rank}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`font-medium ${isMe ? 'text-wc-blue' : 'text-wc-light-gray'}`}>
+                  <Link
+                    href={`/profile/${s.user_id}`}
+                    className={`font-medium hover:underline underline-offset-2 ${isMe ? 'text-wc-blue' : 'text-wc-light-gray'}`}
+                  >
                     {s.display_name}
                     {isMe && <span className="text-xs ml-1.5 opacity-70">(du)</span>}
-                  </span>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-right font-display text-xl text-wc-light-gray">
                   {s.total_points}
