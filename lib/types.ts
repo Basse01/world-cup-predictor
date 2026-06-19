@@ -1,4 +1,4 @@
-export type Stage = 'group' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final'
+export type Stage = 'group' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'third_place' | 'final'
 export type MatchStatus = 'scheduled' | 'live' | 'finished'
 export type Pick1X2 = '1' | 'X' | '2'
 export type WinnerPick = 'home' | 'away'

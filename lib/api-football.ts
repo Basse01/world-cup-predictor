@@ -90,11 +90,13 @@ export function mapStatus(apiStatus: string): 'scheduled' | 'live' | 'finished' 
   return 'scheduled'
 }
 
-export function mapStage(round: string): 'group' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final' {
+export function mapStage(round: string): 'group' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'third_place' | 'final' {
   if (round.includes('Group')) return 'group'
+  if (round.includes('Round of 32')) return 'round_of_32'
   if (round.includes('Round of 16') || round.includes('Last 16')) return 'round_of_16'
   if (round.includes('Quarter-final') || round.includes('Quarter Final')) return 'quarter_final'
   if (round.includes('Semi-final') || round.includes('Semi Final')) return 'semi_final'
+  if (round.includes('3rd') || round.includes('Third') || round.includes('Bronze')) return 'third_place'
   return 'final'
 }
 
