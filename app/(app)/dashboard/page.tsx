@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Match, Standing } from '@/lib/types'
+import LiveMatchBanner from '@/components/live-match-banner'
 
 const KNOCKOUT_STAGES = ['round_of_16', 'quarter_final', 'semi_final', 'final']
 
@@ -12,6 +13,7 @@ export default async function DashboardPage() {
 
   const [
     { data: profile },
+    { data: liveMatches },
     { data: upcomingMatches },
     { data: topStandings },
     { data: myStanding },
@@ -21,6 +23,7 @@ export default async function DashboardPage() {
     { data: myPredictions },
   ] = await Promise.all([
     supabase.from('profiles').select('display_name').eq('id', user.id).single(),
+    supabase.from('matches').select('*').eq('status', 'live').order('kickoff_at'),
     supabase.from('matches').select('*').eq('status', 'scheduled').order('kickoff_at').limit(3),
     supabase.from('standings').select('*').order('rank').limit(5),
     supabase.from('standings').select('total_points, rank').eq('user_id', user.id).single(),
@@ -51,6 +54,8 @@ export default async function DashboardPage() {
           {new Date().toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
+
+      <LiveMatchBanner matches={(liveMatches ?? []) as Match[]} />
 
       {myStanding ? (
         <div className="bg-[#1a1a1a] rounded-xl p-5 border border-wc-blue/30 flex justify-between items-center">
