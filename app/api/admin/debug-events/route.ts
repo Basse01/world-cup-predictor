@@ -3,11 +3,6 @@ import { NextResponse } from 'next/server'
 const API_BASE = 'https://v3.football.api-sports.io'
 
 export async function GET(request: Request) {
-  const auth = request.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const url = new URL(request.url)
   const fixtureId = url.searchParams.get('fixture') ?? '1489391'
 
