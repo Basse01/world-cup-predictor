@@ -59,9 +59,15 @@ export default function BonusForm({
         <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide">
           {bonusType.label}
         </h3>
-        <span className="text-xs font-display text-wc-green">
-          +{pointsToShow}p
-        </span>
+        {saved && value && !hasOptions ? (
+          <span className="text-xs font-display text-wc-green truncate max-w-[45%] text-right">
+            {value}
+          </span>
+        ) : (
+          <span className="text-xs font-display text-wc-green">
+            +{pointsToShow}p
+          </span>
+        )}
       </div>
 
       {hasOptions && !locked && (
