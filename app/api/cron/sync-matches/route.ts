@@ -93,14 +93,19 @@ export async function GET(request: Request) {
   }
 
   // ── Sync match events ──────────────────────────────────────────────────────
-  // Always re-sync live matches. For finished matches, sync once (events_synced_at IS NULL),
-  // limit 8 per cron run to stay within API rate limits.
-  const { data: matchesNeedingEvents } = await supabase
-    .from('matches')
-    .select('id, api_match_id, status')
-    .or('status.eq.live,and(status.eq.finished,events_synced_at.is.null)')
-    .order('kickoff_at', { ascending: false })
-    .limit(8)
+  // Always re-sync live matches. For finished matches, sync once (events_synced_at IS NULL).
+  const [{ data: liveForEvents }, { data: unsyncedFinished }] = await Promise.all([
+    supabase.from('matches').select('id, api_match_id, status').eq('status', 'live'),
+    supabase.from('matches').select('id, api_match_id, status')
+      .eq('status', 'finished')
+      .is('events_synced_at', null)
+      .order('kickoff_at', { ascending: false })
+      .limit(6),
+  ])
+  const matchesNeedingEvents = [
+    ...(liveForEvents ?? []),
+    ...(unsyncedFinished ?? []),
+  ].slice(0, 8)
 
   let eventsSynced = 0
   if (matchesNeedingEvents) {
