@@ -113,7 +113,7 @@ function OptionDropdown({
             <li key={opt.value}>
               <button
                 type="button"
-                onPointerDown={e => { e.preventDefault(); onSelect(opt.value, opt.points); handleClose() }}
+                onClick={() => { onSelect(opt.value, opt.points); handleClose() }}
                 className={`w-full text-left px-4 py-4 flex items-center justify-between gap-3 text-base transition-colors active:bg-white/10
                   ${opt.value === value ? 'text-wc-blue font-medium bg-wc-blue/10' : 'text-wc-light-gray'}`}
               >

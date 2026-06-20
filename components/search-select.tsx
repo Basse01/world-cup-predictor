@@ -93,7 +93,7 @@ export default function SearchSelect({ options, value, onChange, placeholder }: 
             <li key={opt}>
               <button
                 type="button"
-                onPointerDown={e => { e.preventDefault(); handleSelect(opt) }}
+                onClick={() => handleSelect(opt)}
                 className={`w-full text-left px-4 py-4 text-base transition-colors active:bg-white/10
                   ${opt === value ? 'text-wc-blue font-medium bg-wc-blue/10' : 'text-wc-light-gray'}`}
               >
