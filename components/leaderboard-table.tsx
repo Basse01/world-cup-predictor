@@ -30,8 +30,8 @@ export default function LeaderboardTable({ initial, userId }: { initial: Standin
   const medalColors = ['text-yellow-400', 'text-gray-400', 'text-amber-600']
 
   return (
-    <div className="rounded-xl overflow-hidden border border-[#2a2a2a]">
-      <table className="w-full">
+    <div className="rounded-xl overflow-x-auto border border-[#2a2a2a]">
+      <table className="w-full min-w-[280px]">
         <thead>
           <tr className="bg-[#1a1a1a] border-b border-[#2a2a2a]">
             <th className="text-left px-4 py-3 text-xs text-wc-dark-gray uppercase tracking-widest font-medium w-12">#</th>
@@ -59,7 +59,7 @@ export default function LeaderboardTable({ initial, userId }: { initial: Standin
                     href={`/profile/${s.user_id}`}
                     className={`font-medium hover:underline underline-offset-2 ${isMe ? 'text-wc-blue' : 'text-wc-light-gray'}`}
                   >
-                    {s.display_name}
+                    <span className="block truncate max-w-[180px] sm:max-w-none">{s.display_name}</span>
                     {isMe && <span className="text-xs ml-1.5 opacity-70">(du)</span>}
                   </Link>
                 </td>

@@ -87,7 +87,7 @@ export default async function GruppspelPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-4xl text-wc-light-gray uppercase tracking-wide">
+        <h1 className="font-display text-3xl sm:text-4xl text-wc-light-gray uppercase tracking-wide">
           Gruppspel
         </h1>
         {missing.length > 0 && (

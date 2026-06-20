@@ -114,7 +114,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
         </div>
 
         {/* Stats row */}
-        <div className="mt-4 pt-4 border-t border-[#2a2a2a] flex gap-6">
+        <div className="mt-4 pt-4 border-t border-[#2a2a2a] flex flex-wrap gap-4 sm:gap-6">
           <div>
             <div className="text-2xl font-display text-wc-green">
               {standing?.total_points ?? 0}

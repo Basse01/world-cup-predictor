@@ -52,7 +52,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
     setSaving(false)
   }
 
-  const baseBtn = 'flex-1 py-2.5 rounded-lg font-display tracking-widest text-lg transition-all duration-150 border-2'
+  const baseBtn = 'flex-1 py-2.5 min-h-[44px] rounded-lg font-display tracking-widest text-lg transition-all duration-150 border-2'
   const activeBtn = 'border-transparent text-white scale-105'
   const inactiveBtn = 'border-wc-dark-gray text-wc-dark-gray hover:border-wc-light-gray hover:text-wc-light-gray'
   const disabledBtn = 'opacity-40 cursor-not-allowed'

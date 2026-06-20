@@ -59,7 +59,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-4xl text-wc-light-gray uppercase tracking-wide">
+        <h1 className="font-display text-3xl sm:text-4xl text-wc-light-gray uppercase tracking-wide">
           Välkommen, {profile?.display_name}
         </h1>
         <p className="text-wc-dark-gray text-sm mt-1">

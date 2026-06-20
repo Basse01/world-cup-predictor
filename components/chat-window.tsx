@@ -164,7 +164,7 @@ export default function ChatWindow({
               >
                 {m.content}
               </div>
-              <span className="text-[10px] text-wc-dark-gray mt-1 px-1">{time}</span>
+              <span className="text-xs text-wc-dark-gray mt-1 px-1">{time}</span>
             </div>
           )
         })}
@@ -191,7 +191,7 @@ export default function ChatWindow({
           type="submit"
           disabled={sending || !input.trim()}
           className="bg-wc-blue hover:bg-blue-800 text-white font-display tracking-widest
-                     px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm uppercase"
+                     px-5 py-2.5 min-h-[44px] rounded-xl transition-colors disabled:opacity-50 text-sm uppercase"
         >
           Skicka
         </button>

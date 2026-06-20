@@ -107,11 +107,11 @@ function MatchOverride({ match }: { match: AdminProps['matches'][0] }) {
           {new Date(match.kickoff_at).toLocaleDateString('sv-SE')}
         </span>
       </span>
-      <input type="number" min={0} max={20} value={home} onChange={e => setHome(e.target.value)}
-        className="w-10 text-center bg-[#111] border border-wc-dark-gray rounded px-1 py-1 text-sm text-wc-light-gray" />
+      <input type="number" inputMode="numeric" min={0} max={20} value={home} onChange={e => setHome(e.target.value)}
+        className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
       <span className="text-wc-dark-gray">–</span>
-      <input type="number" min={0} max={20} value={away} onChange={e => setAway(e.target.value)}
-        className="w-10 text-center bg-[#111] border border-wc-dark-gray rounded px-1 py-1 text-sm text-wc-light-gray" />
+      <input type="number" inputMode="numeric" min={0} max={20} value={away} onChange={e => setAway(e.target.value)}
+        className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
       <button onClick={save} disabled={saving}
         className="bg-wc-blue text-white text-xs px-3 py-1.5 rounded transition-colors hover:bg-blue-800 disabled:opacity-50">
         {saving ? '...' : 'Spara'}

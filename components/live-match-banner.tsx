@@ -90,12 +90,12 @@ export default function LiveMatchBanner({ matches, events = {} }: Props) {
             </div>
 
             {/* Score */}
-            <div className="flex items-center gap-3 px-2">
-              <span className="font-display text-5xl text-wc-light-gray tabular-nums">
+            <div className="flex items-center gap-2 px-1">
+              <span className="font-display text-4xl sm:text-5xl text-wc-light-gray tabular-nums">
                 {m.home_score ?? 0}
               </span>
-              <span className="font-display text-3xl text-wc-dark-gray">–</span>
-              <span className="font-display text-5xl text-wc-light-gray tabular-nums">
+              <span className="font-display text-2xl sm:text-3xl text-wc-dark-gray">–</span>
+              <span className="font-display text-4xl sm:text-5xl text-wc-light-gray tabular-nums">
                 {m.away_score ?? 0}
               </span>
             </div>

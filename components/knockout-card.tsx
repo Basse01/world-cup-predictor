@@ -71,7 +71,7 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
           onClick={() => !locked && setWinnerPick('home')}
           disabled={locked}
           aria-label={`Välj ${match.home_team} som vinnare`}
-          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all border-2 w-28
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all border-2 w-[72px] sm:w-28 min-h-[44px]
             ${winnerPick === 'home' ? 'border-wc-blue bg-wc-blue/10 scale-105' : 'border-transparent'}
             ${locked ? 'cursor-default' : 'cursor-pointer hover:border-wc-dark-gray'}`}
         >
@@ -97,7 +97,7 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
             placeholder="0"
             aria-label="Hemmamål"
             className="w-12 text-center font-display text-2xl bg-[#111] border border-wc-dark-gray
-                       rounded-lg py-2 text-wc-light-gray focus:outline-none focus:border-wc-blue
+                       rounded-lg py-3 min-h-[44px] text-wc-light-gray focus:outline-none focus:border-wc-blue
                        disabled:opacity-40"
           />
           <span className="font-display text-2xl text-wc-dark-gray">–</span>
@@ -114,7 +114,7 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
             placeholder="0"
             aria-label="Bortamål"
             className="w-12 text-center font-display text-2xl bg-[#111] border border-wc-dark-gray
-                       rounded-lg py-2 text-wc-light-gray focus:outline-none focus:border-wc-blue
+                       rounded-lg py-3 min-h-[44px] text-wc-light-gray focus:outline-none focus:border-wc-blue
                        disabled:opacity-40"
           />
         </div>
@@ -123,7 +123,7 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
           onClick={() => !locked && setWinnerPick('away')}
           disabled={locked}
           aria-label={`Välj ${match.away_team} som vinnare`}
-          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all border-2 w-28
+          className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all border-2 w-[72px] sm:w-28 min-h-[44px]
             ${winnerPick === 'away' ? 'border-wc-red bg-wc-red/10 scale-105' : 'border-transparent'}
             ${locked ? 'cursor-default' : 'cursor-pointer hover:border-wc-dark-gray'}`}
         >
