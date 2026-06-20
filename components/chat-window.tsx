@@ -101,13 +101,17 @@ export default function ChatWindow({
     setMessages(prev => [...prev, optimisticMsg])
     setInput('')
 
-    const { data, error } = await supabase
-      .from('messages')
-      .insert({ user_id: userId, content: trimmed })
-      .select('id')
-      .single()
-
-    if (error) {
+    let messageId: string | null = null
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: trimmed }),
+      })
+      if (!res.ok) throw new Error('Send failed')
+      const json = await res.json() as { id: string }
+      messageId = json.id
+    } catch {
       setMessages(prev => prev.filter(m => m.id !== optimisticId))
       setInput(trimmed)
       setSendError('Kunde inte skicka meddelandet. Försök igen.')
@@ -115,11 +119,11 @@ export default function ChatWindow({
       return
     }
 
-    if (data?.id) {
+    if (messageId) {
       // Mark real ID so realtime skips it, then swap optimistic placeholder
-      pendingIds.current.add(data.id)
+      pendingIds.current.add(messageId)
       setMessages(prev => prev.map(m =>
-        m.id === optimisticId ? { ...m, id: data.id } : m
+        m.id === optimisticId ? { ...m, id: messageId! } : m
       ))
     }
 
