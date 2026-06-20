@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import SearchSelect from '@/components/search-select'
 import { WC_PLAYERS } from '@/lib/onboarding-data'
@@ -24,67 +25,125 @@ function OptionDropdown({
   options,
   value,
   onSelect,
+  label,
 }: {
   options: BonusOption[]
   value: string
   onSelect: (val: string, pts: number | null) => void
+  label: string
 }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
   const selected = options.find(o => o.value === value)
 
+  const filtered = query.trim().length === 0
+    ? options
+    : options.filter(o => o.display_label.toLowerCase().includes(query.toLowerCase()))
+
+  function handleOpen() { setOpen(true); setQuery('') }
+  function handleClose() { setOpen(false); setQuery('') }
+
   useEffect(() => {
-    function onPointerDown(e: PointerEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    if (open) {
+      const t = setTimeout(() => searchRef.current?.focus(), 100)
+      return () => clearTimeout(t)
     }
-    document.addEventListener('pointerdown', onPointerDown)
-    return () => document.removeEventListener('pointerdown', onPointerDown)
-  }, [])
+  }, [open])
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [open])
+
+  const sheet = open ? createPortal(
+    <div className="fixed inset-0 z-[9999] flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/60" onPointerDown={handleClose} />
+      <div
+        className="relative bg-[#1a1a1a] rounded-t-2xl flex flex-col"
+        style={{ maxHeight: '80vh', paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+        <div className="flex items-center justify-between px-4 pb-3 flex-shrink-0">
+          <span className="font-display text-base text-wc-light-gray uppercase tracking-wide">{label}</span>
+          <button type="button" onPointerDown={handleClose} className="w-9 h-9 flex items-center justify-center text-white/50 hover:text-white rounded-full">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        {options.length > 8 && (
+          <div className="px-4 pb-3 flex-shrink-0">
+            <div className="relative">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                ref={searchRef}
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Sök lag..."
+                autoComplete="off"
+                className="w-full bg-[#111] border border-[#333] rounded-xl pl-10 pr-4 py-3 text-base text-wc-light-gray placeholder-white/30 focus:outline-none focus:border-wc-blue"
+              />
+            </div>
+          </div>
+        )}
+        <ul className="flex-1 overflow-y-auto overscroll-contain divide-y divide-white/5 min-h-0">
+          {filtered.length === 0 ? (
+            <li className="px-4 py-6 text-center text-white/40 text-sm">Inga träffar</li>
+          ) : (
+            filtered.map(opt => (
+              <li key={opt.value}>
+                <button
+                  type="button"
+                  onPointerDown={e => {
+                    e.preventDefault()
+                    onSelect(opt.value, opt.points)
+                    handleClose()
+                  }}
+                  className={`w-full text-left px-4 py-4 flex items-center justify-between gap-3 text-base transition-colors active:bg-white/10
+                    ${opt.value === value ? 'text-wc-blue font-medium bg-wc-blue/10' : 'text-wc-light-gray'}`}
+                >
+                  <span>{opt.display_label}</span>
+                  <span className="text-wc-green text-sm font-display flex-shrink-0">+{opt.points}p</span>
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+    </div>,
+    document.body
+  ) : null
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full bg-[#111] border border-[#3a3a3a] rounded-lg px-4 py-3.5
-                   flex items-center justify-between gap-2 text-base
-                   focus:outline-none focus:border-wc-blue transition-colors hover:border-[#4a4a4a]"
+        onClick={handleOpen}
+        className="w-full bg-[#111] border border-[#3a3a3a] rounded-xl px-4 py-3.5
+                   flex items-center justify-between gap-2 text-base min-h-[52px]
+                   focus:outline-none focus:border-wc-blue transition-colors hover:border-[#4a4a4a]
+                   active:border-wc-blue"
       >
-        <span className={`flex-1 text-left ${selected ? 'text-wc-light-gray' : 'text-[#555]'}`}>
+        <span className={selected ? 'text-wc-light-gray flex-1 text-left' : 'text-white/30 flex-1 text-left'}>
           {selected ? selected.display_label : 'Välj lag...'}
         </span>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {selected && (
-            <span className="text-wc-green text-sm font-display">+{selected.points}p</span>
-          )}
-          <svg
-            width="16" height="16" viewBox="0 0 16 16" fill="none"
-            className={`text-[#666] transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
-          >
+          {selected && <span className="text-wc-green text-sm font-display">+{selected.points}p</span>}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-white/40">
             <path d="M3 6L8 11L13 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
       </button>
-
-      {open && (
-        <div className="absolute z-50 w-full mt-1 bg-[#1e1e1e] border border-[#3a3a3a] rounded-xl shadow-2xl max-h-64 overflow-y-auto">
-          {options.map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onPointerDown={e => { e.preventDefault(); onSelect(opt.value, opt.points); setOpen(false) }}
-              className={`w-full px-4 py-3.5 flex items-center justify-between gap-2 text-sm transition-colors
-                ${opt.value === value
-                  ? 'bg-wc-blue/10 text-wc-light-gray'
-                  : 'text-[#ccc] hover:bg-[#252525] hover:text-wc-light-gray active:bg-[#2a2a2a]'}`}
-            >
-              <span className="text-left">{opt.display_label}</span>
-              <span className="text-wc-green text-xs font-display flex-shrink-0">+{opt.points}p</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      {sheet}
+    </>
   )
 }
 
@@ -192,6 +251,7 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
                 options={bt.options}
                 value={values[bt.type]}
                 onSelect={(val, pts) => selectOption(bt.type, bt.options, val)}
+                label={bt.label}
               />
             )}
 
