@@ -8,6 +8,7 @@ import {
   mapStage,
   type ApiFixture,
 } from '@/lib/api-football'
+import { sendPushToUsers } from '@/lib/push'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -102,6 +103,55 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: upsertError.message }, { status: 500 })
   }
 
+  // ── Push reminders: notify users who haven't tipped matches locking soon ──
+  let remindersent = 0
+  if (isMatchWindow) {
+    const in5min = new Date(now.getTime() + 5 * 60 * 1000).toISOString()
+
+    const { data: lockingSoon } = await supabase
+      .from('matches')
+      .select('id, home_team, away_team, stage')
+      .eq('status', 'scheduled')
+      .gte('lock_at', nowIso)
+      .lte('lock_at', in5min)
+      .is('reminder_sent_at', null)
+
+    if (lockingSoon && lockingSoon.length > 0) {
+      const { data: allProfiles } = await supabase.from('profiles').select('id')
+
+      for (const match of lockingSoon) {
+        const { data: existingPreds } = await supabase
+          .from('predictions')
+          .select('user_id')
+          .eq('match_id', match.id)
+
+        const predictedIds = new Set(
+          (existingPreds ?? []).map((p: { user_id: string }) => p.user_id)
+        )
+        const unpredictedIds = (allProfiles ?? [])
+          .map((p: { id: string }) => p.id)
+          .filter(id => !predictedIds.has(id))
+
+        const tipUrl = match.stage === 'group' ? '/tips/gruppspel' : '/tips/slutspel'
+
+        if (unpredictedIds.length > 0) {
+          await sendPushToUsers(unpredictedIds, {
+            title: '⚽ Glöm inte tippa!',
+            body: `${match.home_team} vs ${match.away_team} låser snart`,
+            url: tipUrl,
+          })
+        }
+
+        await supabase
+          .from('matches')
+          .update({ reminder_sent_at: nowIso })
+          .eq('id', match.id)
+
+        remindersent++
+      }
+    }
+  }
+
   // Only calculate points for finished matches that haven't been processed yet.
   // Admin override calls calculate_match_points directly and is unaffected.
   const { data: unprocessedFinished } = await supabase
@@ -193,6 +243,7 @@ export async function GET(request: Request) {
     groups_inferred: teamGroupMap.size,
     points_processed: unprocessedFinished?.length ?? 0,
     events_synced: eventsSynced,
+    reminders_sent: remindersent,
     match_window: isMatchWindow,
     timestamp: new Date().toISOString(),
   })
