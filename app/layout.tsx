@@ -3,7 +3,16 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'VM 2026',
-  description: 'FIFA World Cup 2026 Prediction Competition',
+  description: 'FIFA World Cup 2026 – Tippa matcherna och klättra på listan',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'VM 2026',
+  },
+  icons: {
+    apple: '/icon.png',
+    icon: '/icon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -29,6 +29,26 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient()
 
+  // ── Determine sync mode ────────────────────────────────────────────────
+  // Check DB (free, no API call) for active match window.
+  // If no match is live or starting within 2h, only run once per hour.
+  const now = new Date()
+  const in2h = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString()
+
+  const [{ count: liveCount }, { count: upcomingCount }] = await Promise.all([
+    supabase.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'live'),
+    supabase.from('matches').select('*', { count: 'exact', head: true })
+      .eq('status', 'scheduled')
+      .gte('kickoff_at', now.toISOString())
+      .lte('kickoff_at', in2h),
+  ])
+  const isMatchWindow = (liveCount ?? 0) > 0 || (upcomingCount ?? 0) > 0
+
+  // Outside match window: only run at the top of each hour (minute 0–4)
+  if (!isMatchWindow && now.getMinutes() >= 5) {
+    return NextResponse.json({ skipped: true, reason: 'no active match window', timestamp: now.toISOString() })
+  }
+
   let fixtures: ApiFixture[]
   try {
     fixtures = await fetchAllFixtures()
@@ -40,7 +60,7 @@ export async function GET(request: Request) {
   const groupFixtures = fixtures.filter(f => mapStage(f.league.round) === 'group')
   const teamGroupMap = inferTeamGroupMap(groupFixtures)
 
-  const now = new Date().toISOString()
+  const nowIso = now.toISOString()
   const matchesToUpsert = fixtures.map((f: ApiFixture) => {
     const stage = mapStage(f.league.round)
     const groupName = stage === 'group'
@@ -70,7 +90,7 @@ export async function GET(request: Request) {
       away_score: f.score.fulltime.away ?? f.goals.away,
       group_name: groupName,
       penalty_winner: penaltyWinner,
-      updated_at: now,
+      updated_at: nowIso,
     }
   })
 
@@ -110,62 +130,61 @@ export async function GET(request: Request) {
     if (successIds.length > 0) {
       await supabase
         .from('matches')
-        .update({ points_calculated_at: now })
+        .update({ points_calculated_at: nowIso })
         .in('id', successIds)
     }
   }
 
-  // ── Sync match events ──────────────────────────────────────────────────────
-  // Live matches: always re-sync (at most 5 at a time — multiple simultaneous games).
-  // Finished matches: sync once, up to 45 per run.
-  // Live matches get priority — they're fetched separately with a tight limit.
-  const [{ data: liveForEvents }, { data: unsyncedFinished }] = await Promise.all([
-    supabase.from('matches').select('id, api_match_id, status').eq('status', 'live').limit(5),
-    supabase.from('matches').select('id, api_match_id, status')
-      .eq('status', 'finished')
-      .is('events_synced_at', null)
-      .order('kickoff_at', { ascending: false })
-      .limit(45),
-  ])
-  const matchesNeedingEvents = [
-    ...(liveForEvents ?? []),
-    ...(unsyncedFinished ?? []),
-  ]
-
+  // ── Sync match events (only during active match window) ───────────────────
   let eventsSynced = 0
-  for (const match of matchesNeedingEvents) {
-    try {
-      const events = await fetchFixtureEvents(match.api_match_id)
-      if (events.length > 0) {
-        if (match.status === 'live') {
-          await supabase.from('match_events').delete().eq('match_id', match.id)
+  if (isMatchWindow) {
+    const [{ data: liveForEvents }, { data: unsyncedFinished }] = await Promise.all([
+      supabase.from('matches').select('id, api_match_id, status').eq('status', 'live').limit(5),
+      supabase.from('matches').select('id, api_match_id, status')
+        .eq('status', 'finished')
+        .is('events_synced_at', null)
+        .order('kickoff_at', { ascending: false })
+        .limit(45),
+    ])
+    const matchesNeedingEvents = [
+      ...(liveForEvents ?? []),
+      ...(unsyncedFinished ?? []),
+    ]
+
+    for (const match of matchesNeedingEvents) {
+      try {
+        const events = await fetchFixtureEvents(match.api_match_id)
+        if (events.length > 0) {
+          if (match.status === 'live') {
+            await supabase.from('match_events').delete().eq('match_id', match.id)
+          }
+          const { error: insertError } = await supabase.from('match_events').upsert(
+            events.map(e => ({
+              match_id: match.id,
+              elapsed: e.time.elapsed,
+              extra_time: e.time.extra ?? null,
+              team_name: e.team.name,
+              team_logo: e.team.logo ?? null,
+              player_name: e.player.name ?? null,
+              assist_name: e.assist.name ?? null,
+              type: e.type,
+              detail: e.detail ?? null,
+              comments: e.comments ?? null,
+            })),
+            { onConflict: 'match_id,elapsed,team_name,type,player_name', ignoreDuplicates: true }
+          )
+          if (insertError) {
+            console.error(`[sync-matches] insert failed for match ${match.id}:`, insertError.message)
+          } else if (match.status === 'finished') {
+            await supabase.from('matches').update({ events_synced_at: nowIso }).eq('id', match.id)
+          }
+        } else {
+          console.log(`[sync-matches] no events for fixture ${match.api_match_id} (${match.status})`)
         }
-        const { error: insertError } = await supabase.from('match_events').upsert(
-          events.map(e => ({
-            match_id: match.id,
-            elapsed: e.time.elapsed,
-            extra_time: e.time.extra ?? null,
-            team_name: e.team.name,
-            team_logo: e.team.logo ?? null,
-            player_name: e.player.name ?? null,
-            assist_name: e.assist.name ?? null,
-            type: e.type,
-            detail: e.detail ?? null,
-            comments: e.comments ?? null,
-          })),
-          { onConflict: 'match_id,elapsed,team_name,type,player_name', ignoreDuplicates: true }
-        )
-        if (insertError) {
-          console.error(`[sync-matches] insert failed for match ${match.id}:`, insertError.message)
-        } else if (match.status === 'finished') {
-          await supabase.from('matches').update({ events_synced_at: now }).eq('id', match.id)
-        }
-      } else {
-        console.log(`[sync-matches] no events for fixture ${match.api_match_id} (${match.status})`)
+        eventsSynced++
+      } catch (err) {
+        console.error(`[sync-matches] events fetch failed for match ${match.id}:`, err)
       }
-      eventsSynced++
-    } catch (err) {
-      console.error(`[sync-matches] events fetch failed for match ${match.id}:`, err)
     }
   }
 
@@ -174,6 +193,7 @@ export async function GET(request: Request) {
     groups_inferred: teamGroupMap.size,
     points_processed: unprocessedFinished?.length ?? 0,
     events_synced: eventsSynced,
+    match_window: isMatchWindow,
     timestamp: new Date().toISOString(),
   })
 }
