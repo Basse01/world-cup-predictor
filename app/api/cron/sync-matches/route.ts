@@ -118,7 +118,7 @@ export async function GET(request: Request) {
           if (match.status === 'live') {
             await supabase.from('match_events').delete().eq('match_id', match.id)
           }
-          const { error: insertError } = await supabase.from('match_events').insert(
+          const { error: insertError } = await supabase.from('match_events').upsert(
             events.map(e => ({
               match_id: match.id,
               elapsed: e.time.elapsed,
@@ -130,7 +130,8 @@ export async function GET(request: Request) {
               type: e.type,
               detail: e.detail ?? null,
               comments: e.comments ?? null,
-            }))
+            })),
+            { onConflict: 'match_id,elapsed,team_name,type,player_name', ignoreDuplicates: true }
           )
           if (insertError) {
             console.error(`[sync-matches] insert failed for match ${match.id}:`, insertError.message)
