@@ -7,7 +7,7 @@ import ChatOverlay from '@/components/chat-overlay'
 
 function HomeIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
@@ -16,7 +16,7 @@ function HomeIcon() {
 
 function GridIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1" />
       <rect x="14" y="3" width="7" height="7" rx="1" />
       <rect x="3" y="14" width="7" height="7" rx="1" />
@@ -27,7 +27,7 @@ function GridIcon() {
 
 function TrophyIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
       <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
       <path d="M4 22h16" />
@@ -40,7 +40,7 @@ function TrophyIcon() {
 
 function UserIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -49,7 +49,7 @@ function UserIcon() {
 
 function ListIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <line x1="8" y1="6" x2="21" y2="6" />
       <line x1="8" y1="12" x2="21" y2="12" />
       <line x1="8" y1="18" x2="21" y2="18" />
@@ -70,7 +70,7 @@ function ChatIcon({ size = 22 }: { size?: number }) {
 
 function ChartIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <line x1="18" y1="20" x2="18" y2="10" />
       <line x1="12" y1="20" x2="12" y2="4" />
       <line x1="6" y1="20" x2="6" y2="14" />
@@ -81,7 +81,7 @@ function ChartIcon() {
 
 function SettingsIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
@@ -215,7 +215,7 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
       <button
         onClick={() => setChatOpen(true)}
         aria-label="Öppna chatten"
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-wc-red rounded-full flex items-center justify-center shadow-2xl active:opacity-75 hover:bg-red-700 transition-colors text-white"
+        className="fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-wc-red rounded-full flex items-center justify-center shadow-2xl active:opacity-75 hover:bg-red-700 transition-colors text-white"
       >
         <ChatIcon size={24} />
         {unreadCount > 0 && (
@@ -239,7 +239,7 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
         className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a] border-t border-[#1a1a1a]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="grid h-14" style={{ gridTemplateColumns: `repeat(${allLinks.length}, 1fr)` }}>
+        <div className="grid h-20" style={{ gridTemplateColumns: `repeat(${allLinks.length}, 1fr)` }}>
           {allLinks.map(({ href, label, Icon }) => {
             const isActive = pathname === href
             const isAdminLink = href === '/admin'
@@ -249,15 +249,15 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
               <Link
                 key={href}
                 href={href}
-                className={`relative flex flex-col items-center justify-center gap-[3px] transition-all active:opacity-60 ${
+                className={`relative flex flex-col items-center justify-center gap-1.5 transition-all active:opacity-60 ${
                   isActive ? activeColor : 'text-[#484848]'
                 }`}
               >
                 {isActive && (
-                  <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-7 h-[3px] rounded-b-full ${activeBar}`} />
+                  <span className={`absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full ${activeBar}`} />
                 )}
                 <Icon />
-                <span className="text-[10px] font-medium leading-none tracking-wide">{label}</span>
+                <span className="text-[11px] font-medium leading-none tracking-wide">{label}</span>
               </Link>
             )
           })}

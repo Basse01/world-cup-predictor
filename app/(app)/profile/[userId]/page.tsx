@@ -171,7 +171,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
               {bonusPreds.map(b => {
                 const label = (bonusTypes ?? []).find(bt => bt.type === b.type)?.label ?? b.type
                 const earnedPoints = b.points_awarded ?? 0
-                const expectedPoints = (bonusTypes ?? []).find(bt => bt.type === b.type)?.points ?? null
+                const expectedPoints =
+                  (bonusOptions ?? []).find(bo => bo.type === b.type && bo.value === b.value)?.points
+                  ?? (bonusTypes ?? []).find(bt => bt.type === b.type)?.points
+                  ?? null
 
                 return (
                   <div key={b.type} className="px-5 py-3.5 flex items-center justify-between">
