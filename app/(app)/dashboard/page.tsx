@@ -28,7 +28,7 @@ export default async function DashboardPage() {
     supabase.from('standings').select('*').order('rank').limit(5),
     supabase.from('standings').select('total_points, rank').eq('user_id', user.id).single(),
     supabase.from('matches')
-      .select('id, home_team, away_team, home_score, away_score, kickoff_at, stage')
+      .select('id, home_team, away_team, home_score, away_score, kickoff_at, stage, home_team_logo, away_team_logo')
       .eq('status', 'finished')
       .order('kickoff_at', { ascending: false })
       .limit(3),
@@ -122,17 +122,47 @@ export default async function DashboardPage() {
         <div className="space-y-2">
           {(upcomingMatches ?? []).map((m: Match) => {
             const ko = new Date(m.kickoff_at)
+            const tipsHref = m.stage === 'group' ? '/tips/gruppspel' : '/tips/slutspel'
+            const hasPred = myPredSet.has(m.id)
             return (
-              <div key={m.id} className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex justify-between items-center">
-                <span className="text-wc-light-gray text-sm">
-                  {m.home_team} <span className="text-wc-dark-gray">vs</span> {m.away_team}
-                </span>
-                <span className="text-xs text-wc-dark-gray whitespace-nowrap ml-2">
-                  {ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}
-                  {' '}
-                  {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
+              <Link
+                key={m.id}
+                href={tipsHref}
+                className="bg-[#1a1a1a] rounded-lg px-4 py-3.5 flex items-center gap-3 hover:bg-[#222] active:bg-[#252525] transition-colors"
+              >
+                {/* Home team */}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {m.home_team_logo && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.home_team_logo} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
+                  )}
+                  <span className="text-wc-light-gray text-sm truncate">{m.home_team}</span>
+                </div>
+                {/* Time */}
+                <div className="text-center flex-shrink-0">
+                  <span className="text-xs text-wc-dark-gray whitespace-nowrap">
+                    {ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {' '}
+                    {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                {/* Away team */}
+                <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                  <span className="text-wc-light-gray text-sm truncate text-right">{m.away_team}</span>
+                  {m.away_team_logo && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.away_team_logo} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
+                  )}
+                </div>
+                {/* Bet indicator */}
+                <div className="flex-shrink-0 ml-1">
+                  {hasPred ? (
+                    <span className="text-wc-green text-xs">✓</span>
+                  ) : (
+                    <span className="text-wc-blue text-xs font-display">Tippa →</span>
+                  )}
+                </div>
+              </Link>
             )
           })}
           {(upcomingMatches ?? []).length === 0 && (
@@ -150,24 +180,39 @@ export default async function DashboardPage() {
             {(recentMatches ?? []).map(m => {
               const pred = predByMatch.get(m.id)
               return (
-                <Link
+                <div
                   key={m.id}
-                  href={`/match/${m.id}`}
-                  className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex justify-between items-center hover:bg-[#222] transition-colors"
+                  className="bg-[#1a1a1a] rounded-lg px-4 py-3.5 flex items-center gap-3"
                 >
-                  <span className="text-wc-light-gray text-sm">
-                    {m.home_team}{' '}
-                    <span className="font-display text-wc-dark-gray">{m.home_score}–{m.away_score}</span>{' '}
-                    {m.away_team}
+                  {/* Home */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {m.home_team_logo && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.home_team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
+                    )}
+                    <span className="text-wc-light-gray text-sm truncate">{m.home_team}</span>
+                  </div>
+                  {/* Score */}
+                  <span className="font-display text-base text-wc-light-gray flex-shrink-0">
+                    {m.home_score}–{m.away_score}
                   </span>
+                  {/* Away */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                    <span className="text-wc-light-gray text-sm truncate text-right">{m.away_team}</span>
+                    {m.away_team_logo && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.away_team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
+                    )}
+                  </div>
+                  {/* Points */}
                   {pred ? (
-                    <span className={`text-sm font-display ${(pred.points_awarded ?? 0) > 0 ? 'text-wc-green' : 'text-wc-dark-gray'}`}>
+                    <span className={`text-sm font-display flex-shrink-0 w-10 text-right ${(pred.points_awarded ?? 0) > 0 ? 'text-wc-green' : 'text-wc-dark-gray'}`}>
                       {(pred.points_awarded ?? 0) > 0 ? `+${pred.points_awarded}p` : '0p'}
                     </span>
                   ) : (
-                    <span className="text-xs text-wc-dark-gray">(inget tips)</span>
+                    <span className="text-xs text-wc-dark-gray flex-shrink-0">(inget tips)</span>
                   )}
-                </Link>
+                </div>
               )
             })}
           </div>
