@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import type { Match, Prediction } from '@/lib/types'
 
 function fmt(iso: string) {
@@ -52,10 +52,7 @@ function computeGroupStandings(matches: Match[]): TeamRow[] {
 }
 
 export default async function GruppspelPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const [supabase, user] = await Promise.all([createClient(), getUser()])
   if (!user) redirect('/login')
 
   const [{ data: matches }, { data: predictions }] = await Promise.all([

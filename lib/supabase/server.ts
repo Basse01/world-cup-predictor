@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -20,3 +21,11 @@ export async function createClient() {
     }
   )
 }
+
+// Deduplicates the auth network call within a single request —
+// layout + page both call this but only one roundtrip to Supabase Auth happens.
+export const getUser = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+})

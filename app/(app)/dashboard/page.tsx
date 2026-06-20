@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { Match, MatchEvent, Standing } from '@/lib/types'
@@ -7,8 +7,7 @@ import LiveMatchBanner from '@/components/live-match-banner'
 const KNOCKOUT_STAGES = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'final']
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const [supabase, user] = await Promise.all([createClient(), getUser()])
   if (!user) redirect('/login')
 
   const [

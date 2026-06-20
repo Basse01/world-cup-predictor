@@ -1,17 +1,17 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LeaderboardTable from '@/components/leaderboard-table'
 import type { Standing } from '@/lib/types'
 
 export default async function LeaderboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const [supabase, user] = await Promise.all([createClient(), getUser()])
   if (!user) redirect('/login')
 
   const { data: standings } = await supabase
     .from('standings')
     .select('*')
     .order('rank')
+    .limit(100)
 
   return (
     <div>

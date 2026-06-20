@@ -118,7 +118,8 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
 
   useEffect(() => {
     const supabase = createClient()
-    const lastSeen = localStorage.getItem('chat_last_seen') ?? new Date(0).toISOString()
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const lastSeen = localStorage.getItem('chat_last_seen') ?? sevenDaysAgo
 
     supabase
       .from('messages')
