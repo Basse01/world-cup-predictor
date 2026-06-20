@@ -30,8 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error?.message ?? 'Insert failed' }, { status: 500 })
   }
 
-  // Fire-and-forget: don't await so the response returns immediately
-  void sendChatPush(user.id, content)
+  await sendChatPush(user.id, content)
 
   return NextResponse.json({ id: message.id })
 }
