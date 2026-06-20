@@ -18,9 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="sv">
-      <head>
-        <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
-      </head>
+
       <body className="min-h-screen bg-wc-black text-wc-light-gray antialiased">
         {children}
       </body>
