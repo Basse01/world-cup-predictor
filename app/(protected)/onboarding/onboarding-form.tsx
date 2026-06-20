@@ -2,9 +2,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SearchSelect from '@/components/search-select'
-import { WC_TEAMS, WC_PLAYERS } from '@/lib/onboarding-data'
+import { WC_PLAYERS } from '@/lib/onboarding-data'
+import type { BonusOption } from '@/lib/types'
 
-type FieldType = 'teams' | 'players' | 'number'
+type FieldType = 'winner' | 'players' | 'number'
 
 const BONUS_TYPES: {
   type: string
@@ -18,8 +19,8 @@ const BONUS_TYPES: {
     type: 'world_cup_winner',
     label: 'VM-vinnare',
     points: null,
-    placeholder: 'Sök eller välj lag...',
-    fieldType: 'teams',
+    placeholder: 'Välj lag...',
+    fieldType: 'winner',
     hint: null,
   },
   {
@@ -41,7 +42,7 @@ const BONUS_TYPES: {
   {
     type: 'total_goals',
     label: 'Antal mål i VM',
-    points: 10,
+    points: 25,
     placeholder: 'Ditt tips...',
     fieldType: 'number',
     hint: 'VM 2022 hade 172 mål på 64 matcher. VM 2026 spelas på 104 matcher — vad tror du?',
@@ -50,14 +51,21 @@ const BONUS_TYPES: {
 
 interface Props {
   existing: Record<string, string>
+  winnerOptions: BonusOption[]
 }
 
-export default function OnboardingForm({ existing }: Props) {
+export default function OnboardingForm({ existing, winnerOptions }: Props) {
   const router = useRouter()
+  const hasWinnerOdds = winnerOptions.length > 0
+
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(BONUS_TYPES.map(b => [b.type, existing[b.type] ?? '']))
   )
   const [saving, setSaving] = useState(false)
+
+  const selectedWinnerPoints = hasWinnerOdds
+    ? (winnerOptions.find(o => o.value === values['world_cup_winner'])?.points ?? null)
+    : null
 
   const allFilled = BONUS_TYPES.every(b => values[b.type].trim() !== '')
 
@@ -69,13 +77,17 @@ export default function OnboardingForm({ existing }: Props) {
     if (!allFilled || saving) return
     setSaving(true)
     await Promise.all(
-      BONUS_TYPES.map(b =>
-        fetch('/api/bonus', {
+      BONUS_TYPES.map(b => {
+        const body: Record<string, unknown> = { type: b.type, value: values[b.type].trim() }
+        if (b.type === 'world_cup_winner' && selectedWinnerPoints != null) {
+          body.locked_points = selectedWinnerPoints
+        }
+        return fetch('/api/bonus', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: b.type, value: values[b.type].trim() }),
+          body: JSON.stringify(body),
         })
-      )
+      })
     )
     await fetch('/api/complete-onboarding', { method: 'POST' })
     router.push('/dashboard')
@@ -95,61 +107,86 @@ export default function OnboardingForm({ existing }: Props) {
       </div>
 
       {/* Bonus cards */}
-      {BONUS_TYPES.map((bt, i) => (
-        <div
-          key={bt.type}
-          className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a]"
-          style={{ animation: `fade-up 0.4s ease-out ${0.15 + i * 0.08}s both` }}
-        >
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-display text-lg text-wc-light-gray uppercase tracking-wide">
-              {bt.label}
-            </h3>
-            {bt.points != null && (
-              <span className="text-xs font-display text-wc-green">+{bt.points}p</span>
+      {BONUS_TYPES.map((bt, i) => {
+        const isWinner = bt.type === 'world_cup_winner'
+        const pointsToShow = isWinner ? selectedWinnerPoints : bt.points
+
+        return (
+          <div
+            key={bt.type}
+            className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a]"
+            style={{ animation: `fade-up 0.4s ease-out ${0.15 + i * 0.08}s both` }}
+          >
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-display text-lg text-wc-light-gray uppercase tracking-wide">
+                {bt.label}
+              </h3>
+              {pointsToShow != null && (
+                <span className="text-xs font-display text-wc-green">+{pointsToShow}p</span>
+              )}
+            </div>
+
+            {isWinner && hasWinnerOdds && (
+              <p className="text-xs text-wc-dark-gray mb-3">
+                Poängen baseras på odds — ju större outsider, desto mer poäng.
+              </p>
+            )}
+
+            {bt.hint && (
+              <div className="bg-[#111] border border-[#2a2a2a] rounded-lg px-4 py-3 mb-3">
+                <p className="text-xs text-wc-dark-gray leading-relaxed">{bt.hint}</p>
+              </div>
+            )}
+
+            {isWinner && hasWinnerOdds ? (
+              <select
+                value={values[bt.type]}
+                onChange={e => set(bt.type, e.target.value)}
+                className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
+                           text-base text-wc-light-gray focus:outline-none focus:border-wc-blue"
+              >
+                <option value="" disabled>{bt.placeholder}</option>
+                {winnerOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.display_label} (+{opt.points}p)
+                  </option>
+                ))}
+              </select>
+            ) : isWinner ? (
+              <SearchSelect
+                options={[]}
+                value={values[bt.type]}
+                onChange={val => set(bt.type, val)}
+                placeholder={bt.placeholder}
+              />
+            ) : null}
+
+            {bt.fieldType === 'players' && (
+              <SearchSelect
+                options={WC_PLAYERS}
+                value={values[bt.type]}
+                onChange={val => set(bt.type, val)}
+                placeholder={bt.placeholder}
+              />
+            )}
+
+            {bt.fieldType === 'number' && (
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={700}
+                value={values[bt.type]}
+                onChange={e => set(bt.type, e.target.value)}
+                placeholder={bt.placeholder}
+                className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
+                           text-base text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
+                           focus:border-wc-blue"
+              />
             )}
           </div>
-
-          {bt.hint && (
-            <div className="bg-[#111] border border-[#2a2a2a] rounded-lg px-4 py-3 mb-3">
-              <p className="text-xs text-wc-dark-gray leading-relaxed">{bt.hint}</p>
-            </div>
-          )}
-
-          {bt.fieldType === 'teams' && (
-            <SearchSelect
-              options={WC_TEAMS}
-              value={values[bt.type]}
-              onChange={val => set(bt.type, val)}
-              placeholder={bt.placeholder}
-            />
-          )}
-
-          {bt.fieldType === 'players' && (
-            <SearchSelect
-              options={WC_PLAYERS}
-              value={values[bt.type]}
-              onChange={val => set(bt.type, val)}
-              placeholder={bt.placeholder}
-            />
-          )}
-
-          {bt.fieldType === 'number' && (
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={700}
-              value={values[bt.type]}
-              onChange={e => set(bt.type, e.target.value)}
-              placeholder={bt.placeholder}
-              className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
-                         text-base text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
-                         focus:border-wc-blue"
-            />
-          )}
-        </div>
-      ))}
+        )
+      })}
 
       {/* Submit */}
       <div style={{ animation: 'fade-up 0.4s ease-out 0.55s both' }} className="pt-2">

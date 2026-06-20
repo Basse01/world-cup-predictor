@@ -9,11 +9,18 @@ export default async function OnboardingPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: predictions } = await supabase
-    .from('bonus_predictions')
-    .select('type, value')
-    .eq('user_id', user.id)
-    .in('type', ONBOARDING_TYPES)
+  const [{ data: predictions }, { data: winnerOptions }] = await Promise.all([
+    supabase
+      .from('bonus_predictions')
+      .select('type, value')
+      .eq('user_id', user.id)
+      .in('type', ONBOARDING_TYPES),
+    supabase
+      .from('bonus_options')
+      .select('type, value, display_label, points, sort_order')
+      .eq('type', 'world_cup_winner')
+      .order('sort_order'),
+  ])
 
   const existing = Object.fromEntries((predictions ?? []).map(p => [p.type, p.value]))
 
@@ -29,7 +36,7 @@ export default async function OnboardingPage() {
         </p>
       </div>
 
-      <OnboardingForm existing={existing} />
+      <OnboardingForm existing={existing} winnerOptions={winnerOptions ?? []} />
     </div>
   )
 }
