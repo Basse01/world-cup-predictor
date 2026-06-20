@@ -20,23 +20,17 @@ export default function BonusForm({
   const [value, setValue] = useState(initialValue)
   const [selectedPoints, setSelectedPoints] = useState<number | null>(initialPoints)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(!!existing?.value)
 
-  const locked = bonusType.locked_at ? new Date(bonusType.locked_at) <= new Date() : false
+  const isLocked = bonusType.locked_at ? new Date(bonusType.locked_at) <= new Date() : false
+  const isReadOnly = isLocked || !!existing?.value
+  const isNumber = /goal|count/i.test(bonusType.type)
 
-  function handleSelect(e: React.ChangeEvent<HTMLSelectElement>) {
-    const val = e.target.value
-    setValue(val)
-    setSaved(false)
-    if (hasOptions) {
-      const opt = options.find(o => o.value === val)
-      setSelectedPoints(opt?.points ?? null)
-    }
-  }
+  const earnedPoints = existing?.points_awarded ?? 0
+  const expectedPoints = selectedPoints ?? existing?.locked_points ?? bonusType.points
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!value.trim() || locked) return
+    if (!value.trim() || isReadOnly || saving) return
     setSaving(true)
     await fetch('/api/bonus', {
       method: 'POST',
@@ -48,37 +42,47 @@ export default function BonusForm({
       }),
     })
     setSaving(false)
-    setSaved(true)
   }
 
-  const pointsToShow = selectedPoints ?? bonusType.points
+  // — Read-only state (already submitted or type is locked) —
+  if (isReadOnly) {
+    return (
+      <div className="bg-[#111] rounded-xl p-4 border border-[#252525]">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide">
+            {bonusType.label}
+          </h3>
+          {earnedPoints > 0 ? (
+            <span className="text-xs font-display text-wc-green">+{earnedPoints}p ✓</span>
+          ) : expectedPoints ? (
+            <span className="text-xs font-display text-[#888]">+{expectedPoints}p</span>
+          ) : null}
+        </div>
+        <div className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex items-center justify-between gap-2">
+          <span className={`text-base ${value ? 'text-wc-light-gray' : 'text-[#555] italic'}`}>
+            {value || 'Ej valt'}
+          </span>
+          <span className="text-[#444] text-sm flex-shrink-0">🔒</span>
+        </div>
+      </div>
+    )
+  }
 
+  // — Editable form (no existing value yet, type not locked) —
   return (
     <div className="bg-[#111] rounded-xl p-4 border border-[#252525]">
       <div className="flex justify-between items-center mb-1">
         <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide">
           {bonusType.label}
         </h3>
-        {saved && value && !hasOptions ? (
-          <span className="text-xs font-display text-wc-green truncate max-w-[45%] text-right">
-            {value}
-          </span>
-        ) : (
-          <span className="text-xs font-display text-wc-green">
-            +{pointsToShow}p
-          </span>
-        )}
+        <span className="text-xs font-display text-[#888]">
+          +{selectedPoints ?? bonusType.points}p
+        </span>
       </div>
 
-      {hasOptions && !locked && (
-        <p className="text-xs text-white/50 mb-3">
+      {hasOptions && (
+        <p className="text-xs text-[#888] mb-3">
           Ju större outsider, desto mer poäng.
-        </p>
-      )}
-
-      {locked && bonusType.locked_at && (
-        <p className="text-xs text-wc-red mb-3">
-          Låst sedan {new Date(bonusType.locked_at).toLocaleDateString('sv-SE')}
         </p>
       )}
 
@@ -86,11 +90,14 @@ export default function BonusForm({
         {hasOptions ? (
           <select
             value={value}
-            onChange={handleSelect}
-            disabled={locked}
-            className="flex-1 bg-[#0d0d0d] border border-wc-dark-gray rounded-lg px-3 py-2
-                       text-base text-wc-light-gray focus:outline-none focus:border-wc-blue
-                       disabled:opacity-40"
+            onChange={e => {
+              const val = e.target.value
+              setValue(val)
+              const opt = options.find(o => o.value === val)
+              setSelectedPoints(opt?.points ?? null)
+            }}
+            className="flex-1 bg-[#0d0d0d] border border-[#3a3a3a] rounded-lg px-3 py-2.5
+                       text-base text-wc-light-gray focus:outline-none focus:border-wc-blue"
           >
             <option value="" disabled>Välj lag...</option>
             {options.map(opt => (
@@ -101,34 +108,29 @@ export default function BonusForm({
           </select>
         ) : (
           <input
-            type="text"
+            type={isNumber ? 'number' : 'text'}
+            inputMode={isNumber ? 'numeric' : 'text'}
+            min={isNumber ? 0 : undefined}
+            max={isNumber ? 700 : undefined}
             value={value}
-            onChange={e => { setValue(e.target.value); setSaved(false) }}
-            disabled={locked}
-            placeholder="Namn..."
-            className="flex-1 bg-[#0d0d0d] border border-wc-dark-gray rounded-lg px-3 py-2
-                       text-base text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
-                       focus:border-wc-blue disabled:opacity-40"
+            onChange={e => setValue(e.target.value)}
+            placeholder={isNumber ? 'Antal mål...' : 'Namn...'}
+            className="flex-1 bg-[#0d0d0d] border border-[#3a3a3a] rounded-lg px-3 py-2.5
+                       text-base text-wc-light-gray placeholder-[#555] focus:outline-none
+                       focus:border-wc-blue"
           />
         )}
 
-        {!locked && (
-          <button
-            type="submit"
-            disabled={saving || !value}
-            className="bg-wc-green hover:bg-green-700 text-white font-display tracking-widest
-                       px-4 py-2 rounded-lg transition-colors disabled:opacity-50 text-sm uppercase"
-          >
-            {saving ? '...' : saved ? '✓' : 'Spara'}
-          </button>
-        )}
+        <button
+          type="submit"
+          disabled={saving || !value.trim()}
+          className="bg-wc-green hover:bg-green-700 text-white font-display tracking-widest
+                     px-4 py-2 rounded-lg transition-colors disabled:opacity-50 text-sm uppercase
+                     min-w-[72px]"
+        >
+          {saving ? '...' : 'Spara'}
+        </button>
       </form>
-
-      {existing?.points_awarded != null && existing.points_awarded > 0 && (
-        <p className="text-xs text-wc-green mt-2 font-medium">
-          +{existing.points_awarded}p intjänade!
-        </p>
-      )}
     </div>
   )
 }
