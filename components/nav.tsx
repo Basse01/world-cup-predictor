@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -111,6 +111,37 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
   const pathname = usePathname()
   const router = useRouter()
   const [chatOpen, setChatOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const chatOpenRef = useRef(false)
+
+  useEffect(() => { chatOpenRef.current = chatOpen }, [chatOpen])
+
+  useEffect(() => {
+    const supabase = createClient()
+    const lastSeen = localStorage.getItem('chat_last_seen') ?? new Date(0).toISOString()
+
+    supabase
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .gt('created_at', lastSeen)
+      .then(({ count }) => setUnreadCount(count ?? 0))
+
+    const channel = supabase
+      .channel('chat-unread')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+        if (!chatOpenRef.current) setUnreadCount(n => n + 1)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
+  useEffect(() => {
+    if (chatOpen) {
+      setUnreadCount(0)
+      localStorage.setItem('chat_last_seen', new Date().toISOString())
+    }
+  }, [chatOpen])
 
   async function signOut() {
     const supabase = createClient()
@@ -187,6 +218,11 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
         className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-wc-red rounded-full flex items-center justify-center shadow-2xl active:opacity-75 hover:bg-red-700 transition-colors text-white"
       >
         <ChatIcon size={24} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-wc-blue text-white text-[11px] font-display font-bold rounded-full flex items-center justify-center px-1 shadow-lg">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
       </button>
 
       {/* ── Chat overlay ─────────────────────────────────────────── */}

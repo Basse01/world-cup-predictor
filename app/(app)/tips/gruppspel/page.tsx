@@ -86,9 +86,22 @@ export default async function GruppspelPage() {
 
   return (
     <div>
-      <h1 className="font-display text-4xl text-wc-light-gray mb-6 uppercase tracking-wide">
-        Gruppspel
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-4xl text-wc-light-gray uppercase tracking-wide">
+          Gruppspel
+        </h1>
+        {missing.length > 0 && (
+          <Link
+            href="/tips/gruppspel/alla"
+            className="flex items-center gap-2 bg-wc-red hover:bg-red-700 active:opacity-75 transition-colors text-white font-display text-sm uppercase tracking-wide px-4 py-2.5 rounded-xl"
+          >
+            <span>Tippa alla</span>
+            <span className="bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
+              {missing.length}
+            </span>
+          </Link>
+        )}
+      </div>
 
       {/* Kommande matcher */}
       {upcoming.length > 0 && (
