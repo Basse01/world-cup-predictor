@@ -16,6 +16,8 @@ function inferFieldType(type: string, hasOptions: boolean): FieldType {
 
 const HINTS: Record<string, string> = {
   total_goals: 'VM 2022 hade 172 mål på 64 matcher. VM 2026 spelas på 104 matcher — vad tror du?',
+  top_scorer: 'Skyttekungen (Golden Boot) är den spelare som gör flest mål under hela VM-turneringen. Gissar du rätt spelare vinner du poäng.',
+  golden_ball: 'Golden Ball delas ut till hela turneringens bästa spelare — det är ett prestationspris och behöver inte gå till skyttekungen.',
 }
 
 export interface BonusTypeWithOptions extends BonusType {
@@ -106,14 +108,14 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
             </div>
 
             {fieldType === 'select' && (
-              <p className="text-xs text-wc-dark-gray mb-3">
+              <p className="text-xs text-[#888] mb-3">
                 Poängen baseras på odds — ju större outsider, desto mer poäng.
               </p>
             )}
 
             {hint && (
               <div className="bg-[#111] border border-[#2a2a2a] rounded-lg px-4 py-3 mb-3">
-                <p className="text-xs text-wc-dark-gray leading-relaxed">{hint}</p>
+                <p className="text-xs text-[#999] leading-relaxed">{hint}</p>
               </div>
             )}
 

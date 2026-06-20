@@ -39,7 +39,7 @@ export default async function OnboardingPage() {
         <h1 className="font-display text-3xl sm:text-4xl text-wc-light-gray uppercase tracking-wide mb-2">
           Innan vi kommer igång
         </h1>
-        <p className="text-wc-dark-gray text-sm leading-relaxed">
+        <p className="text-[#888] text-sm leading-relaxed">
           Lås in dina bonusgissningar för chans till extra poäng
         </p>
       </div>
