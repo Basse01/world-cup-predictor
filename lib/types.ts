@@ -63,6 +63,7 @@ export interface BonusPrediction {
   value: string
   points_awarded: number
   locked_at: string | null
+  locked_points: number | null
 }
 
 export interface BonusType {
