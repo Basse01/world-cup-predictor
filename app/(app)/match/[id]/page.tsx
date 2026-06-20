@@ -72,8 +72,8 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           )}
           {!isLive && !isFinished && (
             <span className="text-xs text-white/50">
-              {kickoff.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
-              {kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+              {kickoff.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Stockholm' })}{' '}
+              {kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })}
             </span>
           )}
           {isFinished && (

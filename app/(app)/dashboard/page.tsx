@@ -62,7 +62,7 @@ export default async function DashboardPage() {
           Välkommen, {profile?.display_name}
         </h1>
         <p className="text-white/50 text-sm mt-1">
-          {new Date().toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
+          {new Date().toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Stockholm' })}
         </p>
       </div>
 
@@ -142,9 +142,9 @@ export default async function DashboardPage() {
                 {/* Time */}
                 <div className="text-center flex-shrink-0">
                   <span className="text-xs text-white/50 whitespace-nowrap">
-                    {ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Stockholm' })}
                     {' '}
-                    {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                    {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })}
                   </span>
                 </div>
                 {/* Away team */}

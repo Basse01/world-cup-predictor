@@ -20,8 +20,8 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
 
   const kickoff = new Date(match.kickoff_at)
   const kickoffStr = kickoff.toLocaleDateString('sv-SE', {
-    weekday: 'short', month: 'short', day: 'numeric',
-  }) + ' ' + kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+    weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Europe/Stockholm',
+  }) + ' ' + kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })
 
   async function handleSave() {
     if (locked || saving) return

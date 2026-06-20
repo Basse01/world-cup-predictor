@@ -6,9 +6,9 @@ import type { Match, Prediction } from '@/lib/types'
 function fmt(iso: string) {
   const d = new Date(iso)
   return (
-    d.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' }) +
+    d.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Stockholm' }) +
     ' ' +
-    d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })
+    d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })
   )
 }
 
