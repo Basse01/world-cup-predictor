@@ -58,66 +58,72 @@ function OptionDropdown({
     }
   }, [open])
 
-  const sheet = open ? createPortal(
-    <div className="fixed inset-0 z-[9999] flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/60" onPointerDown={handleClose} />
-      <div
-        className="relative bg-[#1a1a1a] rounded-t-2xl flex flex-col"
-        style={{ maxHeight: '80vh', paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-white/20" />
-        </div>
-        <div className="flex items-center justify-between px-4 pb-3 flex-shrink-0">
-          <span className="font-display text-base text-wc-light-gray uppercase tracking-wide">{label}</span>
-          <button type="button" onPointerDown={handleClose} className="w-9 h-9 flex items-center justify-center text-white/50 hover:text-white rounded-full">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-        {options.length > 8 && (
-          <div className="px-4 pb-3 flex-shrink-0">
-            <div className="relative">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                ref={searchRef}
-                type="text"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Sök lag..."
-                autoComplete="off"
-                className="w-full bg-[#111] border border-[#333] rounded-xl pl-10 pr-4 py-3 text-base text-wc-light-gray placeholder-white/30 focus:outline-none focus:border-wc-blue"
-              />
-            </div>
-          </div>
-        )}
-        <ul className="flex-1 overflow-y-auto overscroll-contain divide-y divide-white/5 min-h-0">
-          {filtered.length === 0 ? (
-            <li className="px-4 py-6 text-center text-white/40 text-sm">Inga träffar</li>
-          ) : (
-            filtered.map(opt => (
-              <li key={opt.value}>
-                <button
-                  type="button"
-                  onPointerDown={e => {
-                    e.preventDefault()
-                    onSelect(opt.value, opt.points)
-                    handleClose()
-                  }}
-                  className={`w-full text-left px-4 py-4 flex items-center justify-between gap-3 text-base transition-colors active:bg-white/10
-                    ${opt.value === value ? 'text-wc-blue font-medium bg-wc-blue/10' : 'text-wc-light-gray'}`}
-                >
-                  <span>{opt.display_label}</span>
-                  <span className="text-wc-green text-sm font-display flex-shrink-0">+{opt.points}p</span>
-                </button>
-              </li>
-            ))
-          )}
-        </ul>
+  const overlay = open ? createPortal(
+    <div className="fixed inset-0 z-[9999] bg-[#0d0d0d] flex flex-col">
+      {/* Header — always stays above keyboard */}
+      <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-[#2a2a2a] flex-shrink-0"
+           style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+        <button type="button" onPointerDown={handleClose}
+          className="flex items-center justify-center w-10 h-10 -ml-1 text-white/60 hover:text-white">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <span className="font-display text-base text-wc-light-gray uppercase tracking-wide flex-1">{label}</span>
       </div>
+
+      {/* Search — stays visible, keyboard only pushes the list */}
+      {options.length > 4 && (
+        <div className="px-4 py-3 flex-shrink-0">
+          <div className="relative">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              ref={searchRef}
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Sök lag..."
+              autoComplete="off"
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl pl-10 pr-4 py-3.5
+                         text-base text-wc-light-gray placeholder-white/30
+                         focus:outline-none focus:border-wc-blue"
+            />
+            {query.length > 0 && (
+              <button type="button" onPointerDown={() => setQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* List — shrinks when keyboard opens */}
+      <ul className="flex-1 overflow-y-auto overscroll-contain divide-y divide-white/5"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        {filtered.length === 0 ? (
+          <li className="px-4 py-8 text-center text-white/40 text-sm">Inga träffar</li>
+        ) : (
+          filtered.map(opt => (
+            <li key={opt.value}>
+              <button
+                type="button"
+                onPointerDown={e => { e.preventDefault(); onSelect(opt.value, opt.points); handleClose() }}
+                className={`w-full text-left px-4 py-4 flex items-center justify-between gap-3 text-base transition-colors active:bg-white/10
+                  ${opt.value === value ? 'text-wc-blue font-medium bg-wc-blue/10' : 'text-wc-light-gray'}`}
+              >
+                <span>{opt.display_label}</span>
+                <span className="text-wc-green text-sm font-display flex-shrink-0">+{opt.points}p</span>
+              </button>
+            </li>
+          ))
+        )}
+      </ul>
     </div>,
     document.body
   ) : null
@@ -133,7 +139,7 @@ function OptionDropdown({
                    active:border-wc-blue"
       >
         <span className={selected ? 'text-wc-light-gray flex-1 text-left' : 'text-white/30 flex-1 text-left'}>
-          {selected ? selected.display_label : 'Välj lag...'}
+          {selected ? selected.display_label : 'Välj...'}
         </span>
         <div className="flex items-center gap-2 flex-shrink-0">
           {selected && <span className="text-wc-green text-sm font-display">+{selected.points}p</span>}
@@ -142,7 +148,7 @@ function OptionDropdown({
           </svg>
         </div>
       </button>
-      {sheet}
+      {overlay}
     </>
   )
 }
@@ -171,7 +177,10 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
   )
   const [saving, setSaving] = useState(false)
 
-  const allFilled = bonusTypes.every(b => (values[b.type] ?? '').trim() !== '')
+  const now = new Date()
+  const isLocked = (bt: BonusTypeWithOptions) => !!(bt.locked_at && new Date(bt.locked_at) <= now)
+  const editableTypes = bonusTypes.filter(b => !isLocked(b))
+  const allFilled = editableTypes.every(b => (values[b.type] ?? '').trim() !== '')
 
   function set(type: string, val: string) {
     setValues(v => ({ ...v, [type]: val }))
@@ -215,6 +224,7 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
       </div>
 
       {bonusTypes.map((bt, i) => {
+        const locked = isLocked(bt)
         const fieldType = inferFieldType(bt.type, bt.options.length > 0)
         const hint = HINTS[bt.type] ?? null
         const pointsToShow = fieldType === 'select' ? selectedPoints[bt.type] : bt.points
@@ -222,49 +232,52 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
         return (
           <div
             key={bt.type}
-            className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a]"
+            className={`rounded-xl p-5 border ${locked ? 'bg-[#111] border-[#1e1e1e] opacity-60' : 'bg-[#1a1a1a] border-[#2a2a2a]'}`}
             style={{ animation: `fade-up 0.4s ease-out ${0.15 + i * 0.08}s both` }}
           >
             <div className="flex justify-between items-center mb-1">
               <h3 className="font-display text-lg text-wc-light-gray uppercase tracking-wide">
                 {bt.label}
               </h3>
-              {pointsToShow != null && (
-                <span className="text-xs font-display text-wc-green">+{pointsToShow}p</span>
-              )}
+              <div className="flex items-center gap-2">
+                {locked && <span className="text-white/30 text-xs">🔒 Låst</span>}
+                {pointsToShow != null && (
+                  <span className="text-xs font-display text-wc-green">+{pointsToShow}p</span>
+                )}
+              </div>
             </div>
 
-            {fieldType === 'select' && (
+            {!locked && fieldType === 'select' && (
               <p className="text-xs text-[#888] mb-3">
                 Poängen baseras på odds — ju större outsider, desto mer poäng.
               </p>
             )}
 
-            {hint && (
+            {!locked && hint && (
               <div className="bg-[#111] border border-[#2a2a2a] rounded-lg px-4 py-3 mb-3">
                 <p className="text-xs text-[#999] leading-relaxed">{hint}</p>
               </div>
             )}
 
-            {fieldType === 'select' && (
+            {locked ? (
+              <div className="bg-[#0d0d0d] rounded-lg px-4 py-3 text-white/40 text-sm italic">
+                Anmälningsperioden för detta val är stängd
+              </div>
+            ) : fieldType === 'select' ? (
               <OptionDropdown
                 options={bt.options}
                 value={values[bt.type]}
                 onSelect={(val, pts) => selectOption(bt.type, bt.options, val)}
                 label={bt.label}
               />
-            )}
-
-            {fieldType === 'players' && (
+            ) : fieldType === 'players' ? (
               <SearchSelect
                 options={WC_PLAYERS}
                 value={values[bt.type]}
                 onChange={val => set(bt.type, val)}
                 placeholder="Sök eller välj spelare..."
               />
-            )}
-
-            {fieldType === 'number' && (
+            ) : fieldType === 'number' ? (
               <input
                 type="number"
                 inputMode="numeric"
@@ -273,20 +286,18 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
                 value={values[bt.type]}
                 onChange={e => set(bt.type, e.target.value)}
                 placeholder="Ditt tips..."
-                className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
-                           text-base text-wc-light-gray placeholder-wc-dark-gray
+                className="w-full bg-[#111] border border-[#3a3a3a] rounded-lg px-4 py-3.5
+                           text-base text-wc-light-gray placeholder-white/30
                            focus:outline-none focus:border-wc-blue"
               />
-            )}
-
-            {fieldType === 'text' && (
+            ) : (
               <input
                 type="text"
                 value={values[bt.type]}
                 onChange={e => set(bt.type, e.target.value)}
                 placeholder="Ditt tips..."
-                className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
-                           text-base text-wc-light-gray placeholder-wc-dark-gray
+                className="w-full bg-[#111] border border-[#3a3a3a] rounded-lg px-4 py-3.5
+                           text-base text-wc-light-gray placeholder-white/30
                            focus:outline-none focus:border-wc-blue"
               />
             )}

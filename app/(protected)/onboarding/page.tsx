@@ -24,10 +24,7 @@ export default async function OnboardingPage() {
     optionsByType.get(opt.type)!.push(opt)
   }
 
-  // Only show bonus types that are not yet locked
-  const unlocked = (bonusTypes ?? []).filter(bt => !bt.locked_at || bt.locked_at > now)
-
-  const typesWithOptions = unlocked.map(bt => ({
+  const typesWithOptions = (bonusTypes ?? []).map(bt => ({
     ...bt,
     options: optionsByType.get(bt.type) ?? [],
   }))
