@@ -29,14 +29,14 @@ export function usePushNotifications() {
   const subscribe = useCallback(async (): Promise<boolean> => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return false
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js')
-      await navigator.serviceWorker.ready
+      await navigator.serviceWorker.register('/sw.js')
+      const readyReg = await navigator.serviceWorker.ready
 
       const permission = await Notification.requestPermission()
       setPushState(permission as PushState)
       if (permission !== 'granted') return false
 
-      const sub = await reg.pushManager.subscribe({
+      const sub = await readyReg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(
           process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
@@ -47,7 +47,7 @@ export function usePushNotifications() {
       const auth = sub.getKey('auth')
       if (!p256dh || !auth) return false
 
-      await fetch('/api/push/subscribe', {
+      const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -56,6 +56,11 @@ export function usePushNotifications() {
           auth: btoa(String.fromCharCode(...new Uint8Array(auth))),
         }),
       })
+
+      if (!res.ok) {
+        await sub.unsubscribe()
+        return false
+      }
 
       return true
     } catch {
