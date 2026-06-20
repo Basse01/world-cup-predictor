@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import SearchSelect from '@/components/search-select'
 import { WC_PLAYERS } from '@/lib/onboarding-data'
@@ -18,6 +18,74 @@ const HINTS: Record<string, string> = {
   total_goals: 'VM 2022 hade 172 mål på 64 matcher. VM 2026 spelas på 104 matcher — vad tror du?',
   top_scorer: 'Skyttekungen (Golden Boot) är den spelare som gör flest mål under hela VM-turneringen. Gissar du rätt spelare vinner du poäng.',
   golden_ball: 'Golden Ball delas ut till hela turneringens bästa spelare — det är ett prestationspris och behöver inte gå till skyttekungen.',
+}
+
+function OptionDropdown({
+  options,
+  value,
+  onSelect,
+}: {
+  options: BonusOption[]
+  value: string
+  onSelect: (val: string, pts: number | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = options.find(o => o.value === value)
+
+  useEffect(() => {
+    function onPointerDown(e: PointerEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full bg-[#111] border border-[#3a3a3a] rounded-lg px-4 py-3.5
+                   flex items-center justify-between gap-2 text-base
+                   focus:outline-none focus:border-wc-blue transition-colors hover:border-[#4a4a4a]"
+      >
+        <span className={`flex-1 text-left ${selected ? 'text-wc-light-gray' : 'text-[#555]'}`}>
+          {selected ? selected.display_label : 'Välj lag...'}
+        </span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {selected && (
+            <span className="text-wc-green text-sm font-display">+{selected.points}p</span>
+          )}
+          <svg
+            width="16" height="16" viewBox="0 0 16 16" fill="none"
+            className={`text-[#666] transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+          >
+            <path d="M3 6L8 11L13 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 w-full mt-1 bg-[#1e1e1e] border border-[#3a3a3a] rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onPointerDown={e => { e.preventDefault(); onSelect(opt.value, opt.points); setOpen(false) }}
+              className={`w-full px-4 py-3.5 flex items-center justify-between gap-2 text-sm transition-colors
+                ${opt.value === value
+                  ? 'bg-wc-blue/10 text-wc-light-gray'
+                  : 'text-[#ccc] hover:bg-[#252525] hover:text-wc-light-gray active:bg-[#2a2a2a]'}`}
+            >
+              <span className="text-left">{opt.display_label}</span>
+              <span className="text-wc-green text-xs font-display flex-shrink-0">+{opt.points}p</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export interface BonusTypeWithOptions extends BonusType {
@@ -120,19 +188,11 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
             )}
 
             {fieldType === 'select' && (
-              <select
+              <OptionDropdown
+                options={bt.options}
                 value={values[bt.type]}
-                onChange={e => selectOption(bt.type, bt.options, e.target.value)}
-                className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
-                           text-base text-wc-light-gray focus:outline-none focus:border-wc-blue"
-              >
-                <option value="" disabled>Välj...</option>
-                {bt.options.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.display_label} (+{opt.points}p)
-                  </option>
-                ))}
-              </select>
+                onSelect={(val, pts) => selectOption(bt.type, bt.options, val)}
+              />
             )}
 
             {fieldType === 'players' && (

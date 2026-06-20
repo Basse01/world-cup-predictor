@@ -57,18 +57,26 @@ export default function SearchSelect({ options, value, onChange, placeholder }: 
 
   return (
     <div className="relative">
-      <input
-        ref={inputRef}
-        type="text"
-        value={query}
-        onChange={e => { setQuery(e.target.value); onChange(e.target.value); setOpen(true) }}
-        onFocus={() => { updateRect(); setOpen(true) }}
-        placeholder={placeholder}
-        autoComplete="off"
-        className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
-                   text-base text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
-                   focus:border-wc-blue"
-      />
+      <div className="relative">
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); onChange(e.target.value); setOpen(true) }}
+          onFocus={() => { updateRect(); setOpen(true) }}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="w-full bg-[#111] border border-[#3a3a3a] rounded-lg px-4 py-3.5 pr-10
+                     text-base text-wc-light-gray placeholder-[#555] focus:outline-none
+                     focus:border-wc-blue transition-colors"
+        />
+        <svg
+          width="16" height="16" viewBox="0 0 16 16" fill="none"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#555]"
+        >
+          <path d="M3 6L8 11L13 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
 
       {open && filtered.length > 0 && rect && createPortal(
         <ul
@@ -80,17 +88,17 @@ export default function SearchSelect({ options, value, onChange, placeholder }: 
             width: rect.width,
             zIndex: 9999,
           }}
-          className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl
-                     max-h-52 overflow-y-auto shadow-2xl"
+          className="bg-[#1e1e1e] border border-[#3a3a3a] rounded-xl
+                     max-h-56 overflow-y-auto shadow-2xl"
         >
           {filtered.slice(0, 60).map(opt => (
             <li
               key={opt}
               onPointerDown={e => { e.preventDefault(); handleSelect(opt) }}
-              className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-100
+              className={`px-4 py-3.5 text-sm cursor-pointer transition-colors duration-100
                 ${opt === value
-                  ? 'text-wc-light-gray bg-[#2a2a2a]'
-                  : 'text-wc-dark-gray hover:bg-[#252525] hover:text-wc-light-gray'}`}
+                  ? 'text-wc-light-gray bg-wc-blue/10'
+                  : 'text-[#ccc] hover:bg-[#252525] hover:text-wc-light-gray active:bg-[#2a2a2a]'}`}
             >
               {opt}
             </li>
