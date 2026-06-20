@@ -70,11 +70,12 @@ export default async function GroupPage({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {matches.map((match) => (
-          <MatchCard
-            key={match.id}
-            match={match as Match}
-            prediction={predMap.get(match.id) as Prediction | undefined}
-          />
+          <div key={match.id} id={match.id} className="scroll-mt-4">
+            <MatchCard
+              match={match as Match}
+              prediction={predMap.get(match.id) as Prediction | undefined}
+            />
+          </div>
         ))}
       </div>
     </div>

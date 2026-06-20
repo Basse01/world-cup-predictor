@@ -122,7 +122,9 @@ export default async function DashboardPage() {
         <div className="space-y-2">
           {(upcomingMatches ?? []).map((m: Match) => {
             const ko = new Date(m.kickoff_at)
-            const tipsHref = m.stage === 'group' ? '/tips/gruppspel' : '/tips/slutspel'
+            const tipsHref = m.stage === 'group'
+              ? `/tips/gruppspel/${m.group_name}#${m.id}`
+              : '/tips/slutspel'
             const hasPred = myPredSet.has(m.id)
             return (
               <Link
