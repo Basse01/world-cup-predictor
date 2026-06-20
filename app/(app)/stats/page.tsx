@@ -18,6 +18,7 @@ export default async function StatsPage() {
       .from('match_events')
       .select('*', { count: 'exact', head: true })
       .eq('type', 'Goal')
+      .neq('detail', 'Own Goal')
       .neq('detail', 'Missed Penalty'),
   ])
 
