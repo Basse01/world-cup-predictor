@@ -1,28 +1,36 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import OnboardingForm from './onboarding-form'
-
-const ONBOARDING_TYPES = ['world_cup_winner', 'golden_ball', 'top_scorer', 'total_goals']
+import type { BonusOption } from '@/lib/types'
 
 export default async function OnboardingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: predictions }, { data: winnerOptions }] = await Promise.all([
-    supabase
-      .from('bonus_predictions')
-      .select('type, value')
-      .eq('user_id', user.id)
-      .in('type', ONBOARDING_TYPES),
-    supabase
-      .from('bonus_options')
-      .select('type, value, display_label, points, sort_order')
-      .eq('type', 'world_cup_winner')
-      .order('sort_order'),
+  const now = new Date().toISOString()
+
+  const [{ data: predictions }, { data: bonusTypes }, { data: bonusOptions }] = await Promise.all([
+    supabase.from('bonus_predictions').select('type, value').eq('user_id', user.id),
+    supabase.from('bonus_types').select('*').order('type'),
+    supabase.from('bonus_options').select('*').order('sort_order'),
   ])
 
   const existing = Object.fromEntries((predictions ?? []).map(p => [p.type, p.value]))
+
+  const optionsByType = new Map<string, BonusOption[]>()
+  for (const opt of (bonusOptions ?? []) as BonusOption[]) {
+    if (!optionsByType.has(opt.type)) optionsByType.set(opt.type, [])
+    optionsByType.get(opt.type)!.push(opt)
+  }
+
+  // Only show bonus types that are not yet locked
+  const unlocked = (bonusTypes ?? []).filter(bt => !bt.locked_at || bt.locked_at > now)
+
+  const typesWithOptions = unlocked.map(bt => ({
+    ...bt,
+    options: optionsByType.get(bt.type) ?? [],
+  }))
 
   return (
     <div>
@@ -36,7 +44,7 @@ export default async function OnboardingPage() {
         </p>
       </div>
 
-      <OnboardingForm existing={existing} winnerOptions={winnerOptions ?? []} />
+      <OnboardingForm existing={existing} bonusTypes={typesWithOptions} />
     </div>
   )
 }

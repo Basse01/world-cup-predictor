@@ -37,7 +37,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'upstream fetch failed' }, { status: 502 })
   }
 
-  // Infer group assignments from fixture pairings (standings API mixes qualifying/tournament data)
   const groupFixtures = fixtures.filter(f => mapStage(f.league.round) === 'group')
   const teamGroupMap = inferTeamGroupMap(groupFixtures)
 
@@ -47,6 +46,15 @@ export async function GET(request: Request) {
     const groupName = stage === 'group'
       ? (teamGroupMap.get(f.teams.home.id) ?? teamGroupMap.get(f.teams.away.id) ?? null)
       : null
+
+    // Derive penalty winner from shootout scores when fulltime is tied
+    const pen = f.score.penalty
+    let penaltyWinner: 'home' | 'away' | null = null
+    if (pen && pen.home != null && pen.away != null) {
+      if (pen.home > pen.away) penaltyWinner = 'home'
+      else if (pen.away > pen.home) penaltyWinner = 'away'
+    }
+
     return {
       api_match_id: f.fixture.id,
       home_team: f.teams.home.name,
@@ -61,6 +69,7 @@ export async function GET(request: Request) {
       home_score: f.score.fulltime.home ?? f.goals.home,
       away_score: f.score.fulltime.away ?? f.goals.away,
       group_name: groupName,
+      penalty_winner: penaltyWinner,
       updated_at: now,
     }
   })
@@ -73,85 +82,97 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: upsertError.message }, { status: 500 })
   }
 
-  const { data: finishedMatches } = await supabase
+  // Only calculate points for finished matches that haven't been processed yet.
+  // Admin override calls calculate_match_points directly and is unaffected.
+  const { data: unprocessedFinished } = await supabase
     .from('matches')
     .select('id')
     .eq('status', 'finished')
+    .is('points_calculated_at', null)
 
-  if (finishedMatches) {
+  if (unprocessedFinished && unprocessedFinished.length > 0) {
     const rpcResults = await Promise.all(
-      finishedMatches.map(match =>
+      unprocessedFinished.map(match =>
         supabase.rpc('calculate_match_points', { p_match_id: match.id })
       )
     )
     const rpcErrors = rpcResults
-      .map((r, i) => r.error ? `${finishedMatches[i].id}: ${r.error.message}` : null)
+      .map((r, i) => r.error ? `${unprocessedFinished[i].id}: ${r.error.message}` : null)
       .filter(Boolean)
     if (rpcErrors.length) {
       console.error('[sync-matches] RPC errors:', rpcErrors)
     }
+
+    // Mark successfully processed matches so we don't re-run next cron
+    const successIds = unprocessedFinished
+      .filter((_, i) => !rpcResults[i].error)
+      .map(m => m.id)
+    if (successIds.length > 0) {
+      await supabase
+        .from('matches')
+        .update({ points_calculated_at: now })
+        .in('id', successIds)
+    }
   }
 
   // ── Sync match events ──────────────────────────────────────────────────────
-  // Always re-sync live matches. For finished matches, sync once (events_synced_at IS NULL).
+  // Live matches: always re-sync (at most 5 at a time — multiple simultaneous games).
+  // Finished matches: sync once, up to 45 per run.
+  // Live matches get priority — they're fetched separately with a tight limit.
   const [{ data: liveForEvents }, { data: unsyncedFinished }] = await Promise.all([
-    supabase.from('matches').select('id, api_match_id, status').eq('status', 'live'),
+    supabase.from('matches').select('id, api_match_id, status').eq('status', 'live').limit(5),
     supabase.from('matches').select('id, api_match_id, status')
       .eq('status', 'finished')
       .is('events_synced_at', null)
       .order('kickoff_at', { ascending: false })
-      .limit(50),
+      .limit(45),
   ])
   const matchesNeedingEvents = [
     ...(liveForEvents ?? []),
     ...(unsyncedFinished ?? []),
-  ].slice(0, 50)
+  ]
 
   let eventsSynced = 0
-  if (matchesNeedingEvents) {
-    for (const match of matchesNeedingEvents) {
-      try {
-        const events = await fetchFixtureEvents(match.api_match_id)
-        if (events.length > 0) {
-          // For live matches: delete + re-insert so removed events (VAR overturns) disappear.
-          // For finished matches: only ever run once, insert is safe.
-          if (match.status === 'live') {
-            await supabase.from('match_events').delete().eq('match_id', match.id)
-          }
-          const { error: insertError } = await supabase.from('match_events').upsert(
-            events.map(e => ({
-              match_id: match.id,
-              elapsed: e.time.elapsed,
-              extra_time: e.time.extra ?? null,
-              team_name: e.team.name,
-              team_logo: e.team.logo ?? null,
-              player_name: e.player.name ?? null,
-              assist_name: e.assist.name ?? null,
-              type: e.type,
-              detail: e.detail ?? null,
-              comments: e.comments ?? null,
-            })),
-            { onConflict: 'match_id,elapsed,team_name,type,player_name', ignoreDuplicates: true }
-          )
-          if (insertError) {
-            console.error(`[sync-matches] insert failed for match ${match.id}:`, insertError.message)
-          } else if (match.status === 'finished') {
-            // Only mark synced after a successful insert
-            await supabase.from('matches').update({ events_synced_at: now }).eq('id', match.id)
-          }
-        } else {
-          console.log(`[sync-matches] no events returned for fixture ${match.api_match_id} (match ${match.id}, status ${match.status})`)
+  for (const match of matchesNeedingEvents) {
+    try {
+      const events = await fetchFixtureEvents(match.api_match_id)
+      if (events.length > 0) {
+        if (match.status === 'live') {
+          await supabase.from('match_events').delete().eq('match_id', match.id)
         }
-        eventsSynced++
-      } catch (err) {
-        console.error(`[sync-matches] events fetch failed for match ${match.id}:`, err)
+        const { error: insertError } = await supabase.from('match_events').upsert(
+          events.map(e => ({
+            match_id: match.id,
+            elapsed: e.time.elapsed,
+            extra_time: e.time.extra ?? null,
+            team_name: e.team.name,
+            team_logo: e.team.logo ?? null,
+            player_name: e.player.name ?? null,
+            assist_name: e.assist.name ?? null,
+            type: e.type,
+            detail: e.detail ?? null,
+            comments: e.comments ?? null,
+          })),
+          { onConflict: 'match_id,elapsed,team_name,type,player_name', ignoreDuplicates: true }
+        )
+        if (insertError) {
+          console.error(`[sync-matches] insert failed for match ${match.id}:`, insertError.message)
+        } else if (match.status === 'finished') {
+          await supabase.from('matches').update({ events_synced_at: now }).eq('id', match.id)
+        }
+      } else {
+        console.log(`[sync-matches] no events for fixture ${match.api_match_id} (${match.status})`)
       }
+      eventsSynced++
+    } catch (err) {
+      console.error(`[sync-matches] events fetch failed for match ${match.id}:`, err)
     }
   }
 
   return NextResponse.json({
     synced: matchesToUpsert.length,
     groups_inferred: teamGroupMap.size,
+    points_processed: unprocessedFinished?.length ?? 0,
     events_synced: eventsSynced,
     timestamp: new Date().toISOString(),
   })

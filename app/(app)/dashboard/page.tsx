@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { Match, MatchEvent, Standing } from '@/lib/types'
 import LiveMatchBanner from '@/components/live-match-banner'
 
-const KNOCKOUT_STAGES = ['round_of_16', 'quarter_final', 'semi_final', 'final']
+const KNOCKOUT_STAGES = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'final']
 
 export default async function DashboardPage() {
   const supabase = await createClient()

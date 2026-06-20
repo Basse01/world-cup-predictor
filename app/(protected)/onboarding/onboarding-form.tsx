@@ -3,85 +3,65 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SearchSelect from '@/components/search-select'
 import { WC_PLAYERS } from '@/lib/onboarding-data'
-import type { BonusOption } from '@/lib/types'
+import type { BonusType, BonusOption } from '@/lib/types'
 
-type FieldType = 'winner' | 'players' | 'number'
+type FieldType = 'select' | 'players' | 'number' | 'text'
 
-const BONUS_TYPES: {
-  type: string
-  label: string
-  points: number | null
-  placeholder: string
-  fieldType: FieldType
-  hint: string | null
-}[] = [
-  {
-    type: 'world_cup_winner',
-    label: 'VM-vinnare',
-    points: null,
-    placeholder: 'Välj lag...',
-    fieldType: 'winner',
-    hint: null,
-  },
-  {
-    type: 'golden_ball',
-    label: 'Bästa spelare (Golden Ball)',
-    points: 10,
-    placeholder: 'Sök eller välj spelare...',
-    fieldType: 'players',
-    hint: null,
-  },
-  {
-    type: 'top_scorer',
-    label: 'Skyttekung (Golden Boot)',
-    points: 10,
-    placeholder: 'Sök eller välj spelare...',
-    fieldType: 'players',
-    hint: null,
-  },
-  {
-    type: 'total_goals',
-    label: 'Antal mål i VM',
-    points: 25,
-    placeholder: 'Ditt tips...',
-    fieldType: 'number',
-    hint: 'VM 2022 hade 172 mål på 64 matcher. VM 2026 spelas på 104 matcher — vad tror du?',
-  },
-]
+function inferFieldType(type: string, hasOptions: boolean): FieldType {
+  if (hasOptions) return 'select'
+  if (/scorer|ball|player/i.test(type)) return 'players'
+  if (/goal|count/i.test(type)) return 'number'
+  return 'text'
+}
+
+const HINTS: Record<string, string> = {
+  total_goals: 'VM 2022 hade 172 mål på 64 matcher. VM 2026 spelas på 104 matcher — vad tror du?',
+}
+
+export interface BonusTypeWithOptions extends BonusType {
+  options: BonusOption[]
+}
 
 interface Props {
   existing: Record<string, string>
-  winnerOptions: BonusOption[]
+  bonusTypes: BonusTypeWithOptions[]
 }
 
-export default function OnboardingForm({ existing, winnerOptions }: Props) {
+export default function OnboardingForm({ existing, bonusTypes }: Props) {
   const router = useRouter()
-  const hasWinnerOdds = winnerOptions.length > 0
 
   const [values, setValues] = useState<Record<string, string>>(
-    Object.fromEntries(BONUS_TYPES.map(b => [b.type, existing[b.type] ?? '']))
+    Object.fromEntries(bonusTypes.map(b => [b.type, existing[b.type] ?? '']))
+  )
+  const [selectedPoints, setSelectedPoints] = useState<Record<string, number | null>>(
+    Object.fromEntries(bonusTypes.map(b => {
+      if (b.options.length === 0) return [b.type, null]
+      const match = b.options.find(o => o.value === (existing[b.type] ?? ''))
+      return [b.type, match?.points ?? null]
+    }))
   )
   const [saving, setSaving] = useState(false)
 
-  const selectedWinnerPoints = hasWinnerOdds
-    ? (winnerOptions.find(o => o.value === values['world_cup_winner'])?.points ?? null)
-    : null
-
-  const allFilled = BONUS_TYPES.every(b => values[b.type].trim() !== '')
+  const allFilled = bonusTypes.every(b => (values[b.type] ?? '').trim() !== '')
 
   function set(type: string, val: string) {
     setValues(v => ({ ...v, [type]: val }))
+  }
+
+  function selectOption(type: string, options: BonusOption[], val: string) {
+    set(type, val)
+    const opt = options.find(o => o.value === val)
+    setSelectedPoints(p => ({ ...p, [type]: opt?.points ?? null }))
   }
 
   async function handleSubmit() {
     if (!allFilled || saving) return
     setSaving(true)
     await Promise.all(
-      BONUS_TYPES.map(b => {
+      bonusTypes.map(b => {
         const body: Record<string, unknown> = { type: b.type, value: values[b.type].trim() }
-        if (b.type === 'world_cup_winner' && selectedWinnerPoints != null) {
-          body.locked_points = selectedWinnerPoints
-        }
+        const pts = selectedPoints[b.type]
+        if (pts != null) body.locked_points = pts
         return fetch('/api/bonus', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -96,7 +76,6 @@ export default function OnboardingForm({ existing, winnerOptions }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Warning banner */}
       <div
         className="bg-[#1a1a0a] border border-wc-red/30 rounded-xl px-4 py-3"
         style={{ animation: 'fade-up 0.4s ease-out 0.05s both' }}
@@ -106,10 +85,10 @@ export default function OnboardingForm({ existing, winnerOptions }: Props) {
         </p>
       </div>
 
-      {/* Bonus cards */}
-      {BONUS_TYPES.map((bt, i) => {
-        const isWinner = bt.type === 'world_cup_winner'
-        const pointsToShow = isWinner ? selectedWinnerPoints : bt.points
+      {bonusTypes.map((bt, i) => {
+        const fieldType = inferFieldType(bt.type, bt.options.length > 0)
+        const hint = HINTS[bt.type] ?? null
+        const pointsToShow = fieldType === 'select' ? selectedPoints[bt.type] : bt.points
 
         return (
           <div
@@ -126,51 +105,44 @@ export default function OnboardingForm({ existing, winnerOptions }: Props) {
               )}
             </div>
 
-            {isWinner && hasWinnerOdds && (
+            {fieldType === 'select' && (
               <p className="text-xs text-wc-dark-gray mb-3">
                 Poängen baseras på odds — ju större outsider, desto mer poäng.
               </p>
             )}
 
-            {bt.hint && (
+            {hint && (
               <div className="bg-[#111] border border-[#2a2a2a] rounded-lg px-4 py-3 mb-3">
-                <p className="text-xs text-wc-dark-gray leading-relaxed">{bt.hint}</p>
+                <p className="text-xs text-wc-dark-gray leading-relaxed">{hint}</p>
               </div>
             )}
 
-            {isWinner && hasWinnerOdds ? (
+            {fieldType === 'select' && (
               <select
                 value={values[bt.type]}
-                onChange={e => set(bt.type, e.target.value)}
+                onChange={e => selectOption(bt.type, bt.options, e.target.value)}
                 className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
                            text-base text-wc-light-gray focus:outline-none focus:border-wc-blue"
               >
-                <option value="" disabled>{bt.placeholder}</option>
-                {winnerOptions.map(opt => (
+                <option value="" disabled>Välj...</option>
+                {bt.options.map(opt => (
                   <option key={opt.value} value={opt.value}>
                     {opt.display_label} (+{opt.points}p)
                   </option>
                 ))}
               </select>
-            ) : isWinner ? (
-              <SearchSelect
-                options={[]}
-                value={values[bt.type]}
-                onChange={val => set(bt.type, val)}
-                placeholder={bt.placeholder}
-              />
-            ) : null}
+            )}
 
-            {bt.fieldType === 'players' && (
+            {fieldType === 'players' && (
               <SearchSelect
                 options={WC_PLAYERS}
                 value={values[bt.type]}
                 onChange={val => set(bt.type, val)}
-                placeholder={bt.placeholder}
+                placeholder="Sök eller välj spelare..."
               />
             )}
 
-            {bt.fieldType === 'number' && (
+            {fieldType === 'number' && (
               <input
                 type="number"
                 inputMode="numeric"
@@ -178,29 +150,38 @@ export default function OnboardingForm({ existing, winnerOptions }: Props) {
                 max={700}
                 value={values[bt.type]}
                 onChange={e => set(bt.type, e.target.value)}
-                placeholder={bt.placeholder}
+                placeholder="Ditt tips..."
                 className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
-                           text-base text-wc-light-gray placeholder-wc-dark-gray focus:outline-none
-                           focus:border-wc-blue"
+                           text-base text-wc-light-gray placeholder-wc-dark-gray
+                           focus:outline-none focus:border-wc-blue"
+              />
+            )}
+
+            {fieldType === 'text' && (
+              <input
+                type="text"
+                value={values[bt.type]}
+                onChange={e => set(bt.type, e.target.value)}
+                placeholder="Ditt tips..."
+                className="w-full bg-[#111] border border-wc-dark-gray rounded-lg px-4 py-3
+                           text-base text-wc-light-gray placeholder-wc-dark-gray
+                           focus:outline-none focus:border-wc-blue"
               />
             )}
           </div>
         )
       })}
 
-      {/* Submit */}
       <div style={{ animation: 'fade-up 0.4s ease-out 0.55s both' }} className="pt-2">
         <button
           onClick={handleSubmit}
           disabled={!allFilled || saving}
           className="relative w-full overflow-hidden rounded-xl py-4 text-white font-display
-                     tracking-[0.18em] text-base uppercase
-                     transition-all duration-150
+                     tracking-[0.18em] text-base uppercase transition-all duration-150
                      hover:scale-[1.02] hover:shadow-[0_8px_32px_rgba(230,29,37,0.45)]
                      active:scale-[0.98]
                      disabled:opacity-40 disabled:cursor-not-allowed
-                     disabled:hover:scale-100 disabled:hover:shadow-none
-                     group"
+                     disabled:hover:scale-100 disabled:hover:shadow-none group"
           style={{ background: 'linear-gradient(135deg, #E61D25 0%, #c4151c 100%)' }}
         >
           <span

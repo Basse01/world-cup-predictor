@@ -80,6 +80,7 @@ export default function AdminPanel({ profiles, matches, bonusTypes }: AdminProps
 }
 
 function MatchOverride({ match }: { match: AdminProps['matches'][0] }) {
+  const router = useRouter()
   const [home, setHome] = useState(match.home_score?.toString() ?? '')
   const [away, setAway] = useState(match.away_score?.toString() ?? '')
   const [saving, setSaving] = useState(false)
@@ -95,6 +96,7 @@ function MatchOverride({ match }: { match: AdminProps['matches'][0] }) {
       body: JSON.stringify({ match_id: match.id, home_score: h, away_score: a }),
     })
     setSaving(false)
+    router.refresh()
   }
 
   return (
