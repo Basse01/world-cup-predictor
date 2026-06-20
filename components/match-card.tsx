@@ -70,7 +70,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-col items-center gap-1 w-28">
           {match.home_team_logo && (
-            <Image src={match.home_team_logo} alt={match.home_team} width={36} height={36} />
+            <Image src={match.home_team_logo} alt={match.home_team} width={36} height={36} className="object-contain" />
           )}
           <span className="font-display text-sm text-wc-light-gray text-center leading-tight">
             {match.home_team}
@@ -81,7 +81,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
         </div>
         <div className="flex flex-col items-center gap-1 w-28">
           {match.away_team_logo && (
-            <Image src={match.away_team_logo} alt={match.away_team} width={36} height={36} />
+            <Image src={match.away_team_logo} alt={match.away_team} width={36} height={36} className="object-contain" />
           )}
           <span className="font-display text-sm text-wc-light-gray text-center leading-tight">
             {match.away_team}
