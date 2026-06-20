@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import BonusForm from '@/components/bonus-form'
 import BackButton from '@/components/back-button'
+import NotificationToggle from '@/components/notification-toggle'
 import type { BonusType, BonusPrediction, BonusOption } from '@/lib/types'
 
 function fmtShort(iso: string) {
@@ -142,25 +143,36 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
 
       {/* Bonus section — editable if own profile, read-only otherwise */}
       {isMe ? (
-        <div className="space-y-3">
-          <h2 className="font-display text-sm uppercase tracking-widest text-white/50 px-1">
-            Bonusgissningar
-          </h2>
-          {(bonusTypes ?? []).length === 0 ? (
-            <div className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a] text-center">
-              <p className="text-white/50 text-sm">Inga bonusfrågor har lagts till än.</p>
-            </div>
-          ) : (
-            (bonusTypes ?? []).map((bt: BonusType) => (
-              <BonusForm
-                key={bt.type}
-                bonusType={bt}
-                existing={predMap.get(bt.type) as BonusPrediction | undefined}
-                options={optionsByType.get(bt.type)}
-              />
-            ))
-          )}
-        </div>
+        <>
+          {/* Notification settings */}
+          <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-[#2a2a2a]">
+            <h2 className="font-display text-sm uppercase tracking-widest text-white/50 mb-4">
+              Notiser
+            </h2>
+            <NotificationToggle />
+          </div>
+
+          {/* Bonus predictions */}
+          <div className="space-y-3">
+            <h2 className="font-display text-sm uppercase tracking-widest text-white/50 px-1">
+              Bonusgissningar
+            </h2>
+            {(bonusTypes ?? []).length === 0 ? (
+              <div className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a] text-center">
+                <p className="text-white/50 text-sm">Inga bonusfrågor har lagts till än.</p>
+              </div>
+            ) : (
+              (bonusTypes ?? []).map((bt: BonusType) => (
+                <BonusForm
+                  key={bt.type}
+                  bonusType={bt}
+                  existing={predMap.get(bt.type) as BonusPrediction | undefined}
+                  options={optionsByType.get(bt.type)}
+                />
+              ))
+            )}
+          </div>
+        </>
       ) : (
         bonusPreds && bonusPreds.length > 0 && (
           <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] overflow-hidden">
