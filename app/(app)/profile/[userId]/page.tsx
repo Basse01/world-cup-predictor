@@ -54,7 +54,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
   ] = await Promise.all([
     supabase.from('profiles').select('display_name').eq('id', userId).single(),
     supabase.from('standings').select('total_points, rank').eq('user_id', userId).single(),
-    supabase.from('bonus_predictions').select('*, bonus_types(label)').eq('user_id', userId),
+    supabase.from('bonus_predictions').select('*').eq('user_id', userId),
     supabase.from('predictions')
       .select('id, match_id, pick, home_score, away_score, winner_pick, points_awarded, matches(home_team, away_team, home_score, away_score, status, stage, kickoff_at, group_name)')
       .eq('user_id', userId),
@@ -169,8 +169,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
             </div>
             <div className="divide-y divide-[#252525]">
               {bonusPreds.map(b => {
-                const bt = b.bonus_types as { label: string } | { label: string }[] | null
-                const label = (Array.isArray(bt) ? bt[0]?.label : bt?.label) ?? b.type
+                const label = (bonusTypes ?? []).find(bt => bt.type === b.type)?.label ?? b.type
                 const earnedPoints = b.points_awarded ?? 0
                 const expectedPoints = b.locked_points ?? null
 
