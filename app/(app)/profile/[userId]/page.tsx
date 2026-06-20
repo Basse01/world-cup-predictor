@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import Link from 'next/link'
 import BonusForm from '@/components/bonus-form'
+import BackButton from '@/components/back-button'
 import type { BonusType, BonusPrediction, BonusOption } from '@/lib/types'
 
 function fmtShort(iso: string) {
@@ -87,6 +87,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
+      <BackButton />
+
       {/* Header */}
       <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-[#2a2a2a]">
         <div className="flex items-start justify-between">
@@ -278,15 +280,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
         )}
       </div>
 
-      {/* Back link */}
-      <div className="text-center pb-4">
-        <Link
-          href="/leaderboard"
-          className="text-xs text-wc-dark-gray hover:text-wc-light-gray transition-colors"
-        >
-          ← Visa hela tabellen
-        </Link>
-      </div>
     </div>
   )
 }

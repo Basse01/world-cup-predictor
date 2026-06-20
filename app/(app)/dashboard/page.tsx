@@ -228,12 +228,13 @@ export default async function DashboardPage() {
         </div>
         <div className="space-y-2">
           {(topStandings ?? []).map((s: Standing, i: number) => (
-            <div
+            <Link
               key={s.user_id}
-              className={`rounded-lg px-4 py-3 flex justify-between items-center ${
+              href={`/profile/${s.user_id}`}
+              className={`rounded-lg px-4 py-3 flex justify-between items-center transition-colors ${
                 s.user_id === user.id
-                  ? 'bg-wc-blue/10 border border-wc-blue/30'
-                  : 'bg-[#1a1a1a]'
+                  ? 'bg-wc-blue/10 border border-wc-blue/30 hover:bg-wc-blue/15 active:bg-wc-blue/20'
+                  : 'bg-[#1a1a1a] hover:bg-[#222] active:bg-[#252525]'
               }`}
             >
               <span className="text-wc-light-gray text-sm">
@@ -244,7 +245,7 @@ export default async function DashboardPage() {
                 )}
               </span>
               <span className="font-display text-lg text-wc-light-gray">{s.total_points}p</span>
-            </div>
+            </Link>
           ))}
           {(topStandings ?? []).length === 0 && (
             <p className="text-wc-dark-gray text-sm">Inga spelare ännu.</p>
