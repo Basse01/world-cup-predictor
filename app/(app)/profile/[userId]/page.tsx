@@ -110,7 +110,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
               <div className="text-3xl font-display text-wc-light-gray">
                 #{rank}
               </div>
-              <div className="text-xs text-wc-dark-gray">placering</div>
+              <div className="text-xs text-white/50">placering</div>
             </div>
           )}
         </div>
@@ -121,20 +121,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
             <div className="text-2xl font-display text-wc-green">
               {standing?.total_points ?? 0}
             </div>
-            <div className="text-xs text-wc-dark-gray">totala poäng</div>
+            <div className="text-xs text-white/50">totala poäng</div>
           </div>
           <div>
             <div className="text-2xl font-display text-wc-light-gray">
               {correctPreds}/{totalPreds}
             </div>
-            <div className="text-xs text-wc-dark-gray">rätta tips</div>
+            <div className="text-xs text-white/50">rätta tips</div>
           </div>
           {bonusPointsTotal > 0 && (
             <div>
               <div className="text-2xl font-display text-wc-blue">
                 +{bonusPointsTotal}
               </div>
-              <div className="text-xs text-wc-dark-gray">bonuspoäng</div>
+              <div className="text-xs text-white/50">bonuspoäng</div>
             </div>
           )}
         </div>
@@ -143,12 +143,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
       {/* Bonus section — editable if own profile, read-only otherwise */}
       {isMe ? (
         <div className="space-y-3">
-          <h2 className="font-display text-sm uppercase tracking-widest text-wc-dark-gray px-1">
+          <h2 className="font-display text-sm uppercase tracking-widest text-white/50 px-1">
             Bonusgissningar
           </h2>
           {(bonusTypes ?? []).length === 0 ? (
             <div className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a] text-center">
-              <p className="text-wc-dark-gray text-sm">Inga bonusfrågor har lagts till än.</p>
+              <p className="text-white/50 text-sm">Inga bonusfrågor har lagts till än.</p>
             </div>
           ) : (
             (bonusTypes ?? []).map((bt: BonusType) => (
@@ -165,7 +165,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
         bonusPreds && bonusPreds.length > 0 && (
           <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] overflow-hidden">
             <div className="px-5 py-3 border-b border-[#2a2a2a]">
-              <h2 className="font-display text-sm uppercase tracking-widest text-wc-dark-gray">
+              <h2 className="font-display text-sm uppercase tracking-widest text-white/50">
                 Bonusgissningar
               </h2>
             </div>
@@ -181,14 +181,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                 return (
                   <div key={b.type} className="px-5 py-3.5 flex items-center justify-between">
                     <div>
-                      <div className="text-xs text-wc-dark-gray mb-0.5">{label}</div>
+                      <div className="text-xs text-white/50 mb-0.5">{label}</div>
                       <div className="text-wc-light-gray font-medium">{b.value || '—'}</div>
                     </div>
                     <div className="text-right">
                       {earnedPoints > 0 ? (
                         <span className="text-wc-green font-display text-sm">+{earnedPoints}p ✓</span>
                       ) : expectedPoints ? (
-                        <span className="text-wc-dark-gray font-display text-sm">+{expectedPoints}p</span>
+                        <span className="text-white/50 font-display text-sm">+{expectedPoints}p</span>
                       ) : null}
                     </div>
                   </div>
@@ -201,12 +201,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
 
       {/* Prediction history */}
       <div className="space-y-3">
-        <h2 className="font-display text-sm uppercase tracking-widest text-wc-dark-gray px-1">
-          Tippningshistorik {historyPreds.length > 0 && <span className="text-[#484848]">({historyPreds.length})</span>}
+        <h2 className="font-display text-sm uppercase tracking-widest text-white/50 px-1">
+          Tippningshistorik {historyPreds.length > 0 && <span className="text-white/40">({historyPreds.length})</span>}
         </h2>
         {historyPreds.length === 0 ? (
           <div className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a] text-center">
-            <p className="text-wc-dark-gray text-sm">Inga tips lämnade än.</p>
+            <p className="text-white/50 text-sm">Inga tips lämnade än.</p>
           </div>
         ) : (
           <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] overflow-hidden">
@@ -228,14 +228,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                 const pickColor = isFinished
                   ? correct
                     ? 'bg-wc-green/15 text-wc-green'
-                    : 'bg-wc-red/10 text-[#484848]'
+                    : 'bg-wc-red/10 text-white/40'
                   : pred.pick === '1'
                     ? 'bg-wc-blue/15 text-wc-blue'
                     : pred.pick === 'X'
                       ? 'bg-wc-green/15 text-wc-green'
                       : pred.pick === '2'
                         ? 'bg-wc-red/15 text-wc-red'
-                        : 'bg-[#252525] text-wc-dark-gray'
+                        : 'bg-[#252525] text-white/40'
 
                 const contextLabel = isGroup
                   ? `Grupp ${m.group_name}`
@@ -244,11 +244,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                 return (
                   <div key={pred.id} className="px-4 py-3 flex items-center gap-2.5">
                     <div className="flex-1 min-w-0">
-                      <div className="text-[11px] text-wc-dark-gray mb-0.5">
+                      <div className="text-[11px] text-white/50 mb-0.5">
                         {fmtShort(m.kickoff_at)} · {contextLabel}
                       </div>
                       <div className="text-sm text-wc-light-gray truncate">
-                        {m.home_team} <span className="text-wc-dark-gray">–</span> {m.away_team}
+                        {m.home_team} <span className="text-white/30">–</span> {m.away_team}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -258,7 +258,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                       </span>
                       {/* Actual result */}
                       {isFinished && m.home_score != null && (
-                        <span className="text-xs text-wc-dark-gray font-display w-8 text-center">
+                        <span className="text-xs text-white/50 font-display w-8 text-center">
                           {m.home_score}–{m.away_score}
                         </span>
                       )}
@@ -267,7 +267,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                       )}
                       {/* Points */}
                       {isFinished && (
-                        <span className={`text-xs font-display font-bold w-7 text-right ${correct ? 'text-wc-green' : 'text-[#3a3a3a]'}`}>
+                        <span className={`text-xs font-display font-bold w-7 text-right ${correct ? 'text-wc-green' : 'text-white/30'}`}>
                           {correct ? `+${pts}` : '0'}
                         </span>
                       )}

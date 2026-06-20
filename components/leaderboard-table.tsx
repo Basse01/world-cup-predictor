@@ -34,9 +34,9 @@ export default function LeaderboardTable({ initial, userId }: { initial: Standin
       <table className="w-full min-w-[280px]">
         <thead>
           <tr className="bg-[#1a1a1a] border-b border-[#2a2a2a]">
-            <th className="text-left px-4 py-3 text-xs text-wc-dark-gray uppercase tracking-widest font-medium w-12">#</th>
-            <th className="text-left px-4 py-3 text-xs text-wc-dark-gray uppercase tracking-widest font-medium">Spelare</th>
-            <th className="text-right px-4 py-3 text-xs text-wc-dark-gray uppercase tracking-widest font-medium">Poäng</th>
+            <th className="text-left px-4 py-3 text-xs text-white/50 uppercase tracking-widest font-medium w-12">#</th>
+            <th className="text-left px-4 py-3 text-xs text-white/50 uppercase tracking-widest font-medium">Spelare</th>
+            <th className="text-right px-4 py-3 text-xs text-white/50 uppercase tracking-widest font-medium">Poäng</th>
           </tr>
         </thead>
         <tbody>
@@ -51,7 +51,7 @@ export default function LeaderboardTable({ initial, userId }: { initial: Standin
                     : i === 0 ? 'bg-[#1a1f1a] hover:bg-[#1e231e]' : 'bg-[#111] hover:bg-[#1a1a1a]'
                 }`}
               >
-                <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-wc-dark-gray'}`}>
+                <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-white/50'}`}>
                   {s.rank}
                 </td>
                 <td className="px-4 py-3">
@@ -72,7 +72,7 @@ export default function LeaderboardTable({ initial, userId }: { initial: Standin
         </tbody>
       </table>
       {standings.length === 0 && (
-        <p className="text-wc-dark-gray text-center py-8">Inga spelare ännu.</p>
+        <p className="text-white/50 text-center py-8">Inga spelare ännu.</p>
       )}
     </div>
   )

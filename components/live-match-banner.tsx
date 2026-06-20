@@ -94,7 +94,7 @@ export default function LiveMatchBanner({ matches, events = {} }: Props) {
               <span className="font-display text-4xl sm:text-5xl text-wc-light-gray tabular-nums">
                 {m.home_score ?? 0}
               </span>
-              <span className="font-display text-2xl sm:text-3xl text-wc-dark-gray">–</span>
+              <span className="font-display text-2xl sm:text-3xl text-white/50">–</span>
               <span className="font-display text-4xl sm:text-5xl text-wc-light-gray tabular-nums">
                 {m.away_score ?? 0}
               </span>
@@ -122,7 +122,7 @@ export default function LiveMatchBanner({ matches, events = {} }: Props) {
           {matchEvents.length > 0 && (
             <div className="border-t border-wc-red/20 px-5 py-3 space-y-1.5">
               {matchEvents.map((e: MatchEvent, i: number) => (
-                <p key={i} className="text-xs text-wc-dark-gray">
+                <p key={i} className="text-xs text-white/50">
                   {recentEventLine(e)}
                 </p>
               ))}

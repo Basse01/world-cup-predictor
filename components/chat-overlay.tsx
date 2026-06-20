@@ -54,7 +54,7 @@ export default function ChatOverlay({
           <button
             onClick={onClose}
             aria-label="Stäng chatten"
-            className="w-10 h-10 flex items-center justify-center text-wc-dark-gray hover:text-wc-light-gray rounded-full active:opacity-60 transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-white/60 hover:text-wc-light-gray rounded-full active:opacity-60 transition-colors"
           >
             <XIcon />
           </button>
@@ -62,7 +62,7 @@ export default function ChatOverlay({
 
         {messages === null ? (
           <div className="flex-1 flex items-center justify-center">
-            <span className="text-wc-dark-gray text-sm">Laddar...</span>
+            <span className="text-white/60 text-sm">Laddar...</span>
           </div>
         ) : (
           <ChatWindow initial={messages} userId={userId} displayName={displayName} />

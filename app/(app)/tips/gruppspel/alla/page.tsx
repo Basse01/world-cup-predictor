@@ -25,7 +25,7 @@ export default async function AllaOtippadeMatcherPage() {
     <div>
       <Link
         href="/tips/gruppspel"
-        className="inline-flex items-center gap-1 text-sm text-wc-dark-gray hover:text-wc-light-gray mb-5 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-white/50 hover:text-wc-light-gray mb-5 transition-colors"
       >
         ← Tillbaka
       </Link>
@@ -35,7 +35,7 @@ export default async function AllaOtippadeMatcherPage() {
           Otippade matcher
         </h1>
         {untipped.length > 0 && (
-          <span className="text-sm text-wc-dark-gray">{untipped.length} kvar</span>
+          <span className="text-sm text-white/50">{untipped.length} kvar</span>
         )}
       </div>
 
@@ -45,7 +45,7 @@ export default async function AllaOtippadeMatcherPage() {
           <p className="text-wc-light-gray font-display text-lg uppercase tracking-wide mb-1">
             Alla matcher tippade!
           </p>
-          <p className="text-wc-dark-gray text-sm">
+          <p className="text-white/50 text-sm">
             Du har inte missat någon öppen match.
           </p>
         </div>

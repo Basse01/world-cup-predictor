@@ -63,7 +63,7 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
         <span className="text-xs font-display tracking-widest text-wc-blue uppercase">
           {stageLabel[match.stage] ?? match.stage}
         </span>
-        <span className="text-xs text-wc-dark-gray">{kickoffStr}</span>
+        <span className="text-xs text-white/50">{kickoffStr}</span>
       </div>
 
       <div className="flex items-center justify-between mb-4">
@@ -100,7 +100,7 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
                        rounded-lg py-3 min-h-[44px] text-wc-light-gray focus:outline-none focus:border-wc-blue
                        disabled:opacity-40"
           />
-          <span className="font-display text-2xl text-wc-dark-gray">–</span>
+          <span className="font-display text-2xl text-wc-light-gray">–</span>
           <input
             type="number"
             min={0} max={20}
@@ -136,7 +136,7 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
         </button>
       </div>
 
-      <p className="text-xs text-wc-dark-gray text-center mb-3">
+      <p className="text-xs text-white/50 text-center mb-3">
         Klicka på ett lag för att välja vinnare · Ange exakt resultat efter 90 min
       </p>
 

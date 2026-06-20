@@ -33,7 +33,7 @@ export default function GroupTabs({ groups }: { groups: string[] }) {
             className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-display tracking-widest uppercase transition-colors ${
               active === g
                 ? 'bg-wc-blue text-white'
-                : 'text-wc-dark-gray hover:text-wc-light-gray hover:bg-[#1a1a1a]'
+                : 'text-white/60 hover:text-white hover:bg-[#1a1a1a]'
             }`}
           >
             {g}

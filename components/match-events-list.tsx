@@ -60,7 +60,7 @@ export default function MatchEventsList({ events, homeTeam, limit }: Props) {
         return (
           <div key={i} className="flex items-center gap-3 px-4 py-2.5">
             {/* Minute */}
-            <span className="text-xs font-display text-wc-dark-gray w-10 shrink-0 text-right">
+            <span className="text-xs font-display text-white/50 w-10 shrink-0 text-right">
               {min}
             </span>
 

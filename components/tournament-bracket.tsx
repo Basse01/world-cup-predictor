@@ -126,7 +126,7 @@ function TeamRow({
         {name || 'TBD'}
       </span>
       {score != null && (
-        <span className={`text-[10px] font-bold flex-shrink-0 ml-0.5 ${highlight ? 'text-wc-blue' : 'text-wc-dark-gray'}`}>
+        <span className={`text-[10px] font-bold flex-shrink-0 ml-0.5 ${highlight ? 'text-wc-blue' : 'text-white/50'}`}>
           {score}
         </span>
       )}
@@ -272,7 +272,7 @@ export default function TournamentBracket({
               className="absolute flex items-center justify-center"
               style={{ left: cx(col), width: CW, top: 0, height: LBL_H }}
             >
-              <span className={`font-display tracking-widest uppercase ${col === 4 ? 'text-sm' : 'text-[9px] text-wc-dark-gray'}`}>
+              <span className={`font-display tracking-widest uppercase ${col === 4 ? 'text-sm' : 'text-[9px] text-white/50'}`}>
                 {label}
               </span>
             </div>
@@ -334,7 +334,7 @@ export default function TournamentBracket({
             <div className="flex justify-end mb-2">
               <button
                 onClick={handleClose}
-                className="text-xs font-display tracking-widest uppercase text-wc-dark-gray hover:text-wc-light-gray"
+                className="text-xs font-display tracking-widest uppercase text-white/50 hover:text-wc-light-gray"
               >
                 Stäng ✕
               </button>

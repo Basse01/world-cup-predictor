@@ -40,7 +40,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="max-w-lg mx-auto space-y-4">
       {/* Back */}
-      <Link href="/dashboard" className="text-xs text-wc-dark-gray hover:text-wc-light-gray flex items-center gap-1">
+      <Link href="/dashboard" className="text-xs text-white/50 hover:text-wc-light-gray flex items-center gap-1">
         ← Tillbaka
       </Link>
 
@@ -55,7 +55,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
       >
         {/* Stage + status bar */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <span className="text-xs text-wc-dark-gray font-display uppercase tracking-widest">
+          <span className="text-xs text-white/50 font-display uppercase tracking-widest">
             {STAGE_LABEL[match.stage] ?? match.stage}
             {match.group_name ? ` — Grupp ${match.group_name}` : ''}
           </span>
@@ -71,13 +71,13 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             </span>
           )}
           {!isLive && !isFinished && (
-            <span className="text-xs text-wc-dark-gray">
+            <span className="text-xs text-white/50">
               {kickoff.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}{' '}
               {kickoff.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
           {isFinished && (
-            <span className="text-xs text-wc-dark-gray font-display uppercase tracking-wider">Avslutad</span>
+            <span className="text-xs text-white/50 font-display uppercase tracking-wider">Avslutad</span>
           )}
         </div>
 
@@ -99,7 +99,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                 {match.home_score ?? 0} – {match.away_score ?? 0}
               </span>
             ) : (
-              <span className="font-display text-2xl text-wc-dark-gray">vs</span>
+              <span className="font-display text-2xl text-white/50">vs</span>
             )}
           </div>
 
@@ -116,7 +116,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
         {/* Goal scorers summary */}
         {goalEvents.length > 0 && (
-          <div className="flex justify-between px-6 pb-4 gap-4 text-xs text-wc-dark-gray">
+          <div className="flex justify-between px-6 pb-4 gap-4 text-xs text-white/50">
             <div className="flex-1 space-y-0.5">
               {goalEvents
                 .filter((e: MatchEvent) => e.team_name === match.home_team)
@@ -146,7 +146,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
       {/* My prediction */}
       {myPred && (
         <div className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] px-5 py-4">
-          <p className="text-xs text-wc-dark-gray uppercase tracking-widest mb-1">Mitt tips</p>
+          <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Mitt tips</p>
           <div className="flex items-center justify-between">
             <span className="text-wc-light-gray text-sm font-display">
               {myPred.pick
@@ -154,7 +154,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                 : `${myPred.home_score ?? '?'} – ${myPred.away_score ?? '?'}`}
             </span>
             {myPred.points_awarded != null && (
-              <span className={`font-display text-lg ${myPred.points_awarded > 0 ? 'text-wc-green' : 'text-wc-dark-gray'}`}>
+              <span className={`font-display text-lg ${myPred.points_awarded > 0 ? 'text-wc-green' : 'text-white/50'}`}>
                 {myPred.points_awarded > 0 ? `+${myPred.points_awarded}p` : '0p'}
               </span>
             )}
@@ -166,10 +166,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
       {(events ?? []).length > 0 && (
         <div className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] overflow-hidden">
           <div className="px-5 py-3 border-b border-[#2a2a2a] flex items-center justify-between">
-            <h2 className="font-display text-sm uppercase tracking-widest text-wc-dark-gray">
+            <h2 className="font-display text-sm uppercase tracking-widest text-white/50">
               Matchhändelser
             </h2>
-            <div className="flex gap-4 text-xs text-wc-dark-gray">
+            <div className="flex gap-4 text-xs text-white/50">
               <span className="truncate max-w-[80px]">{match.home_team}</span>
               <span className="truncate max-w-[80px] text-right">{match.away_team}</span>
             </div>
@@ -183,7 +183,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
       {(events ?? []).length === 0 && (isLive || isFinished) && (
         <div className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] px-5 py-4 text-center">
-          <p className="text-wc-dark-gray text-sm">Inga händelser synkade ännu.</p>
+          <p className="text-white/50 text-sm">Inga händelser synkade ännu.</p>
         </div>
       )}
     </div>

@@ -14,7 +14,7 @@ export default async function SlutspelPage() {
         <span className="inline-block w-2 h-2 rounded-full bg-wc-blue animate-pulse" />
         Kommer snart
       </div>
-      <p className="text-sm text-wc-dark-gray max-w-xs">
+      <p className="text-sm text-white/50 max-w-xs">
         Slutspelets bracket öppnar när gruppspelet är klart.
       </p>
     </div>

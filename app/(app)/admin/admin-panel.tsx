@@ -26,7 +26,7 @@ export default function AdminPanel({ profiles, matches, bonusTypes }: AdminProps
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             className={`px-4 py-2 rounded-lg font-display tracking-widest text-sm uppercase transition-colors
-              ${activeTab === t.key ? 'bg-wc-red text-white' : 'bg-[#1a1a1a] text-wc-dark-gray hover:text-wc-light-gray'}`}
+              ${activeTab === t.key ? 'bg-wc-red text-white' : 'bg-[#1a1a1a] text-white/50 hover:text-wc-light-gray'}`}
           >
             {t.label}
           </button>
@@ -103,13 +103,13 @@ function MatchOverride({ match }: { match: AdminProps['matches'][0] }) {
     <div className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex items-center gap-3">
       <span className="text-wc-light-gray text-sm flex-1">
         {match.home_team} vs {match.away_team}
-        <span className="ml-2 text-xs text-wc-dark-gray">
+        <span className="ml-2 text-xs text-white/50">
           {new Date(match.kickoff_at).toLocaleDateString('sv-SE')}
         </span>
       </span>
       <input type="number" inputMode="numeric" min={0} max={20} value={home} onChange={e => setHome(e.target.value)}
         className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
-      <span className="text-wc-dark-gray">–</span>
+      <span className="text-white/50">–</span>
       <input type="number" inputMode="numeric" min={0} max={20} value={away} onChange={e => setAway(e.target.value)}
         className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
       <button onClick={save} disabled={saving}

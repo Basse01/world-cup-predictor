@@ -172,7 +172,7 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
                 className={`px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap transition-colors ${
                   pathname === href
                     ? 'bg-wc-blue text-white'
-                    : 'text-wc-dark-gray hover:text-wc-light-gray'
+                    : 'text-white/70 hover:text-white'
                 }`}
               >
                 {label}
@@ -190,7 +190,7 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
             )}
             <button
               onClick={signOut}
-              className="ml-2 px-3 py-1.5 text-sm text-wc-dark-gray hover:text-wc-red transition-colors"
+              className="ml-2 px-3 py-1.5 text-sm text-white/60 hover:text-wc-red transition-colors"
             >
               Logga ut
             </button>
@@ -206,7 +206,7 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
         <button
           onClick={signOut}
           aria-label="Logga ut"
-          className="flex items-center justify-center w-11 h-11 text-[#555] active:text-wc-red transition-colors"
+          className="flex items-center justify-center w-11 h-11 text-white/60 active:text-wc-red transition-colors"
         >
           <LogoutIcon />
         </button>
@@ -251,7 +251,7 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
                 key={href}
                 href={href}
                 className={`relative flex flex-col items-center justify-center gap-1.5 transition-all active:opacity-60 ${
-                  isActive ? activeColor : 'text-[#484848]'
+                  isActive ? activeColor : 'text-white/40'
                 }`}
               >
                 {isActive && (

@@ -45,29 +45,29 @@ export default async function StatsPage() {
       {/* Total goals */}
       <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-[#2a2a2a] text-center">
         <div className="text-6xl font-display text-wc-green">{totalGoals ?? 0}</div>
-        <div className="text-sm text-wc-dark-gray mt-2 uppercase tracking-widest font-display">
+        <div className="text-sm text-white/50 mt-2 uppercase tracking-widest font-display">
           Mål i VM 2026
         </div>
       </div>
 
       {/* Skytteliga */}
       <div>
-        <h2 className="font-display text-sm uppercase tracking-widest text-wc-dark-gray px-1 mb-3">
+        <h2 className="font-display text-sm uppercase tracking-widest text-white/50 px-1 mb-3">
           Skytteliga
         </h2>
 
         {scorers.length === 0 ? (
           <div className="bg-[#1a1a1a] rounded-xl p-8 border border-[#2a2a2a] text-center">
-            <p className="text-wc-dark-gray text-sm">Inga mål registrerade ännu.</p>
+            <p className="text-white/50 text-sm">Inga mål registrerade ännu.</p>
           </div>
         ) : (
           <div className="rounded-xl overflow-x-auto border border-[#2a2a2a]">
             <table className="w-full min-w-[280px]">
               <thead>
                 <tr className="bg-[#1a1a1a] border-b border-[#2a2a2a]">
-                  <th className="text-left px-4 py-3 text-xs text-wc-dark-gray uppercase tracking-widest font-medium w-10">#</th>
-                  <th className="text-left px-4 py-3 text-xs text-wc-dark-gray uppercase tracking-widest font-medium">Spelare</th>
-                  <th className="text-right px-4 py-3 text-xs text-wc-dark-gray uppercase tracking-widest font-medium">Mål</th>
+                  <th className="text-left px-4 py-3 text-xs text-white/50 uppercase tracking-widest font-medium w-10">#</th>
+                  <th className="text-left px-4 py-3 text-xs text-white/50 uppercase tracking-widest font-medium">Spelare</th>
+                  <th className="text-right px-4 py-3 text-xs text-white/50 uppercase tracking-widest font-medium">Mål</th>
                 </tr>
               </thead>
               <tbody>
@@ -78,12 +78,12 @@ export default async function StatsPage() {
                       i === 0 ? 'bg-[#1a1f1a] hover:bg-[#1e231e]' : 'bg-[#111] hover:bg-[#1a1a1a]'
                     }`}
                   >
-                    <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-wc-dark-gray'}`}>
+                    <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-white/50'}`}>
                       {i + 1}
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-wc-light-gray">{s.name}</div>
-                      <div className="text-xs text-wc-dark-gray mt-0.5">{s.team}</div>
+                      <div className="text-xs text-white/50 mt-0.5">{s.team}</div>
                     </td>
                     <td className="px-4 py-3 text-right font-display text-xl text-wc-green">
                       {s.goals}

@@ -45,7 +45,7 @@ export default async function GroupPage({
     <div>
       <Link
         href="/tips/gruppspel"
-        className="inline-flex items-center gap-1 text-sm text-wc-dark-gray hover:text-wc-light-gray mb-5 transition-colors"
+        className="inline-flex items-center gap-1 text-sm text-white/70 hover:text-white mb-5 transition-colors"
       >
         ← Alla grupper
       </Link>
@@ -55,13 +55,13 @@ export default async function GroupPage({
           <h1 className="font-display text-4xl text-wc-light-gray uppercase tracking-wide">
             Grupp {group}
           </h1>
-          <span className="text-sm text-wc-dark-gray">
+          <span className="text-sm text-white/50">
             {done}/{matches.length} tips
           </span>
         </div>
         <div className="flex flex-wrap gap-x-3 mt-2">
           {teams.map((t) => (
-            <span key={t} className="text-xs text-wc-dark-gray">
+            <span key={t} className="text-xs text-white/50">
               {t}
             </span>
           ))}

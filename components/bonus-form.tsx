@@ -71,7 +71,7 @@ export default function BonusForm({
       </div>
 
       {hasOptions && !locked && (
-        <p className="text-xs text-wc-dark-gray mb-3">
+        <p className="text-xs text-white/50 mb-3">
           Ju större outsider, desto mer poäng.
         </p>
       )}

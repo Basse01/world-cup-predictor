@@ -61,7 +61,7 @@ export default async function DashboardPage() {
         <h1 className="font-display text-3xl sm:text-4xl text-wc-light-gray uppercase tracking-wide">
           Välkommen, {profile?.display_name}
         </h1>
-        <p className="text-wc-dark-gray text-sm mt-1">
+        <p className="text-white/50 text-sm mt-1">
           {new Date().toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
@@ -71,17 +71,17 @@ export default async function DashboardPage() {
       {myStanding ? (
         <div className="bg-[#1a1a1a] rounded-xl p-5 border border-wc-blue/30 flex justify-between items-center">
           <div>
-            <p className="text-xs text-wc-dark-gray uppercase tracking-widest">Min placering</p>
+            <p className="text-xs text-white/50 uppercase tracking-widest">Min placering</p>
             <p className="font-display text-5xl text-wc-light-gray mt-1">#{myStanding.rank}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-wc-dark-gray uppercase tracking-widest">Poäng</p>
+            <p className="text-xs text-white/50 uppercase tracking-widest">Poäng</p>
             <p className="font-display text-5xl text-wc-green mt-1">{myStanding.total_points}</p>
           </div>
         </div>
       ) : (
         <div className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a] text-center">
-          <p className="text-wc-dark-gray text-sm">Du har inte lämnat några tips ännu.</p>
+          <p className="text-white/50 text-sm">Du har inte lämnat några tips ännu.</p>
           <Link href="/tips/gruppspel" className="text-wc-blue text-sm hover:underline mt-1 inline-block">
             Lämna tips →
           </Link>
@@ -91,24 +91,24 @@ export default async function DashboardPage() {
       {(groupTotal > 0 || knockoutTotal > 0) && (
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
-            <p className="text-xs text-wc-dark-gray uppercase tracking-widest mb-2">Gruppspel</p>
+            <p className="text-xs text-white/50 uppercase tracking-widest mb-2">Gruppspel</p>
             <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden">
               <div
                 className="h-full bg-wc-blue rounded-full transition-all duration-500"
                 style={{ width: groupTotal > 0 ? `${(groupDone / groupTotal) * 100}%` : '0%' }}
               />
             </div>
-            <p className="text-xs text-wc-dark-gray mt-2">{groupDone}/{groupTotal} tips</p>
+            <p className="text-xs text-white/50 mt-2">{groupDone}/{groupTotal} tips</p>
           </div>
           <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
-            <p className="text-xs text-wc-dark-gray uppercase tracking-widest mb-2">Slutspel</p>
+            <p className="text-xs text-white/50 uppercase tracking-widest mb-2">Slutspel</p>
             <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden">
               <div
                 className="h-full bg-wc-red rounded-full transition-all duration-500"
                 style={{ width: knockoutTotal > 0 ? `${(knockoutDone / knockoutTotal) * 100}%` : '0%' }}
               />
             </div>
-            <p className="text-xs text-wc-dark-gray mt-2">{knockoutDone}/{knockoutTotal} tips</p>
+            <p className="text-xs text-white/50 mt-2">{knockoutDone}/{knockoutTotal} tips</p>
           </div>
         </div>
       )}
@@ -141,7 +141,7 @@ export default async function DashboardPage() {
                 </div>
                 {/* Time */}
                 <div className="text-center flex-shrink-0">
-                  <span className="text-xs text-wc-dark-gray whitespace-nowrap">
+                  <span className="text-xs text-white/50 whitespace-nowrap">
                     {ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' })}
                     {' '}
                     {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
@@ -167,7 +167,7 @@ export default async function DashboardPage() {
             )
           })}
           {(upcomingMatches ?? []).length === 0 && (
-            <p className="text-wc-dark-gray text-sm">Inga kommande matcher.</p>
+            <p className="text-white/50 text-sm">Inga kommande matcher.</p>
           )}
         </div>
       </div>
@@ -207,11 +207,11 @@ export default async function DashboardPage() {
                   </div>
                   {/* Points */}
                   {pred ? (
-                    <span className={`text-sm font-display flex-shrink-0 w-10 text-right ${(pred.points_awarded ?? 0) > 0 ? 'text-wc-green' : 'text-wc-dark-gray'}`}>
+                    <span className={`text-sm font-display flex-shrink-0 w-10 text-right ${(pred.points_awarded ?? 0) > 0 ? 'text-wc-green' : 'text-white/40'}`}>
                       {(pred.points_awarded ?? 0) > 0 ? `+${pred.points_awarded}p` : '0p'}
                     </span>
                   ) : (
-                    <span className="text-xs text-wc-dark-gray flex-shrink-0">(inget tips)</span>
+                    <span className="text-xs text-white/40 flex-shrink-0">(inget tips)</span>
                   )}
                 </div>
               )
@@ -247,7 +247,7 @@ export default async function DashboardPage() {
             </Link>
           ))}
           {(topStandings ?? []).length === 0 && (
-            <p className="text-wc-dark-gray text-sm">Inga spelare ännu.</p>
+            <p className="text-white/50 text-sm">Inga spelare ännu.</p>
           )}
         </div>
       </div>

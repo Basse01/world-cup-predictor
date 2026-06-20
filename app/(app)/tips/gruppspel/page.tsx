@@ -103,7 +103,7 @@ export default async function GruppspelPage() {
       {/* Kommande matcher */}
       {upcoming.length > 0 && (
         <section className="mb-8">
-          <h2 className="font-display text-xs text-wc-dark-gray uppercase tracking-widest mb-3">
+          <h2 className="font-display text-xs text-white/50 uppercase tracking-widest mb-3">
             Kommande matcher
           </h2>
           <div className="space-y-2">
@@ -122,12 +122,12 @@ export default async function GruppspelPage() {
                   className="flex items-center justify-between bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 hover:border-wc-blue transition-colors active:scale-[0.99]"
                 >
                   <div className="min-w-0">
-                    <div className="text-xs text-wc-dark-gray mb-0.5">
+                    <div className="text-xs text-white/50 mb-0.5">
                       {fmt(m.kickoff_at)} · Grupp {m.group_name}
                     </div>
                     <div className="text-sm text-wc-light-gray truncate">
                       {m.home_team}{' '}
-                      <span className="text-wc-dark-gray mx-1">vs</span> {m.away_team}
+                      <span className="text-white/30 mx-1">vs</span> {m.away_team}
                     </div>
                   </div>
                   <div className="ml-3 flex-shrink-0">
@@ -136,7 +136,7 @@ export default async function GruppspelPage() {
                         {pred.pick}
                       </span>
                     ) : (
-                      <span className="text-xs text-wc-dark-gray">Tippa →</span>
+                      <span className="text-xs text-white/50">Tippa →</span>
                     )}
                   </div>
                 </Link>
@@ -150,7 +150,7 @@ export default async function GruppspelPage() {
       {missing.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-xs text-wc-dark-gray uppercase tracking-widest">
+            <h2 className="font-display text-xs text-white/50 uppercase tracking-widest">
               Matcher du inte gissat på
             </h2>
             <span className="text-xs bg-wc-red/10 text-wc-red px-2 py-0.5 rounded-full font-medium">
@@ -165,19 +165,19 @@ export default async function GruppspelPage() {
                 className="flex items-center justify-between bg-[#1a1a1a] border border-wc-red/20 rounded-xl px-4 py-3 hover:border-wc-red/60 transition-colors active:scale-[0.99]"
               >
                 <div>
-                  <div className="text-xs text-wc-dark-gray mb-0.5">
+                  <div className="text-xs text-white/50 mb-0.5">
                     {fmt(m.kickoff_at)} · Grupp {m.group_name}
                   </div>
                   <div className="text-sm text-wc-light-gray">
                     {m.home_team}{' '}
-                    <span className="text-wc-dark-gray mx-1">vs</span> {m.away_team}
+                    <span className="text-white/30 mx-1">vs</span> {m.away_team}
                   </div>
                 </div>
                 <span className="ml-3 text-xs text-wc-red flex-shrink-0">Tippa →</span>
               </Link>
             ))}
             {missing.length > 5 && (
-              <p className="text-xs text-wc-dark-gray text-center pt-1">
+              <p className="text-xs text-white/50 text-center pt-1">
                 + {missing.length - 5} till i de olika grupperna
               </p>
             )}
@@ -187,7 +187,7 @@ export default async function GruppspelPage() {
 
       {/* All groups grid */}
       <section>
-        <h2 className="font-display text-xs text-wc-dark-gray uppercase tracking-widest mb-3">
+        <h2 className="font-display text-xs text-white/50 uppercase tracking-widest mb-3">
           Alla grupper
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -222,7 +222,7 @@ export default async function GruppspelPage() {
                       ? 'bg-wc-green/10 text-wc-green'
                       : noneDone
                         ? 'bg-wc-red/10 text-wc-red'
-                        : 'bg-[#252525] text-wc-dark-gray'
+                        : 'bg-[#252525] text-white/40'
                   }`}>
                     {done}/{total}
                   </span>
@@ -235,7 +235,7 @@ export default async function GruppspelPage() {
                       <div
                         key={t.team}
                         className={`flex items-center gap-1.5 text-[11px] ${
-                          i < 2 ? 'text-wc-light-gray' : 'text-[#484848]'
+                          i < 2 ? 'text-wc-light-gray' : 'text-white/40'
                         }`}
                       >
                         <span className="w-3 text-center opacity-40 font-display leading-none">{i + 1}</span>
@@ -246,12 +246,12 @@ export default async function GruppspelPage() {
                         )}
                         <span className="flex-1 truncate leading-none">{t.team}</span>
                         <span className={`w-7 text-right font-display leading-none text-[10px] ${
-                          t.gd > 0 ? 'text-wc-green' : t.gd < 0 ? 'text-wc-red/70' : 'text-[#484848]'
+                          t.gd > 0 ? 'text-wc-green' : t.gd < 0 ? 'text-wc-red/70' : 'text-white/30'
                         }`}>
                           {t.gd > 0 ? `+${t.gd}` : t.gd}
                         </span>
                         <span className={`w-5 text-right font-display leading-none font-bold ${
-                          i < 2 ? 'text-wc-light-gray' : 'text-[#484848]'
+                          i < 2 ? 'text-wc-light-gray' : 'text-white/40'
                         }`}>{t.pts}</span>
                       </div>
                     ))}

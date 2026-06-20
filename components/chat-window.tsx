@@ -146,12 +146,12 @@ export default function ChatWindow({
                 {/* Avatar circle */}
                 <span
                   className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-display font-bold
-                    ${isMe ? 'bg-wc-blue/30 text-wc-blue' : 'bg-[#2a2a2a] text-wc-dark-gray'}
+                    ${isMe ? 'bg-wc-blue/30 text-wc-blue' : 'bg-[#2a2a2a] text-white/50'}
                     group-hover:opacity-80 transition-opacity`}
                 >
                   {(m.profiles?.display_name?.[0] ?? '?').toUpperCase()}
                 </span>
-                <span className="text-xs text-wc-dark-gray group-hover:text-wc-light-gray transition-colors">
+                <span className="text-xs text-white/50 group-hover:text-wc-light-gray transition-colors">
                   {m.profiles?.display_name}
                 </span>
               </Link>
@@ -164,7 +164,7 @@ export default function ChatWindow({
               >
                 {m.content}
               </div>
-              <span className="text-xs text-wc-dark-gray mt-1 px-1">{time}</span>
+              <span className="text-xs text-white/50 mt-1 px-1">{time}</span>
             </div>
           )
         })}

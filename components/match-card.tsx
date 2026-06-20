@@ -54,7 +54,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
 
   const baseBtn = 'flex-1 py-2.5 min-h-[44px] rounded-lg font-display tracking-widest text-lg transition-all duration-150 border-2'
   const activeBtn = 'border-transparent text-white scale-105'
-  const inactiveBtn = 'border-wc-dark-gray text-wc-dark-gray hover:border-wc-light-gray hover:text-wc-light-gray'
+  const inactiveBtn = 'border-white/25 text-white/50 hover:border-white/60 hover:text-white/90'
   const disabledBtn = 'opacity-40 cursor-not-allowed'
 
   return (
@@ -65,7 +65,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
           LIVE
         </span>
       )}
-      <div className="text-xs text-wc-dark-gray mb-3">{kickoffStr}</div>
+      <div className="text-xs text-white/50 mb-3">{kickoffStr}</div>
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-col items-center gap-1 w-28">
@@ -76,7 +76,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
             {match.home_team}
           </span>
         </div>
-        <div className="font-display text-3xl text-wc-dark-gray">
+        <div className="font-display text-3xl text-wc-light-gray">
           {match.status === 'finished' ? `${match.home_score} – ${match.away_score}` : 'VS'}
         </div>
         <div className="flex flex-col items-center gap-1 w-28">
@@ -108,7 +108,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
       </div>
 
       {locked && !prediction?.pick && (
-        <p className="text-xs text-wc-dark-gray mt-2 text-center">Låst — ingen prediktion</p>
+        <p className="text-xs text-white/50 mt-2 text-center">Låst — ingen prediktion</p>
       )}
       {prediction?.points_awarded != null && prediction.points_awarded > 0 && (
         <p className="text-xs text-wc-green mt-2 text-center font-medium animate-count-up">
