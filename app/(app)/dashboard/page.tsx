@@ -131,44 +131,41 @@ export default async function DashboardPage() {
               <Link
                 key={m.id}
                 href={tipsHref}
-                className={`rounded-xl px-4 py-3.5 flex items-center gap-3 transition-all active:scale-[0.99]
+                className={`rounded-xl px-4 py-4 flex items-center transition-all active:scale-[0.99]
                   ${hasPred
                     ? 'bg-[#1a1a1a] border border-[#252525] hover:bg-[#1e1e1e]'
                     : 'bg-[#111a24] border border-wc-blue/40 hover:border-wc-blue/70 hover:bg-[#131e2a]'
                   }`}
               >
-                {/* Home flag */}
-                <div className="flex-shrink-0">
+                {/* Mirror spacer — same width as CTA so center block is truly centered */}
+                <div className="w-[62px] flex-shrink-0" aria-hidden="true" />
+
+                {/* Flags + time — centered */}
+                <div className="flex-1 flex items-center justify-center gap-5">
                   {m.home_team_logo
                     // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={m.home_team_logo} alt={m.home_team} title={m.home_team} className="w-10 h-10 object-contain" />
-                    : <div className="w-10 h-10 bg-white/10 rounded-full" />
+                    ? <img src={m.home_team_logo} alt={m.home_team} title={m.home_team} className="w-10 h-10 object-contain flex-shrink-0" />
+                    : <div className="w-10 h-10 bg-white/10 rounded-full flex-shrink-0" />
                   }
-                </div>
-
-                {/* Time block */}
-                <div className="flex-1 text-center">
-                  <div className="text-[10px] text-white/40 uppercase tracking-widest font-display">{dayLabel}</div>
-                  <div className="font-display text-xl text-wc-light-gray leading-tight">
-                    {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })}
+                  <div className="text-center">
+                    <div className="text-[10px] text-white/40 uppercase tracking-widest font-display">{dayLabel}</div>
+                    <div className="font-display text-xl text-wc-light-gray leading-tight">
+                      {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })}
+                    </div>
                   </div>
-                </div>
-
-                {/* Away flag */}
-                <div className="flex-shrink-0">
                   {m.away_team_logo
                     // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={m.away_team_logo} alt={m.away_team} title={m.away_team} className="w-10 h-10 object-contain" />
-                    : <div className="w-10 h-10 bg-white/10 rounded-full" />
+                    ? <img src={m.away_team_logo} alt={m.away_team} title={m.away_team} className="w-10 h-10 object-contain flex-shrink-0" />
+                    : <div className="w-10 h-10 bg-white/10 rounded-full flex-shrink-0" />
                   }
                 </div>
 
                 {/* CTA */}
-                <div className="flex-shrink-0 w-16 flex justify-end">
+                <div className="w-[62px] flex-shrink-0 flex justify-end">
                   {hasPred ? (
-                    <span className="text-wc-green text-sm">✓</span>
+                    <span className="text-wc-green text-lg">✓</span>
                   ) : (
-                    <span className="bg-wc-blue text-white text-xs font-display tracking-widest uppercase px-3 py-1.5 rounded-lg">
+                    <span className="bg-wc-blue text-white text-xs font-display tracking-widest uppercase px-3 py-1.5 rounded-lg whitespace-nowrap">
                       Tippa
                     </span>
                   )}
