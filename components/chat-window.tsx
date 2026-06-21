@@ -132,7 +132,7 @@ export default function ChatWindow({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 px-4">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain space-y-3 py-4">
         {messages.map(m => {
           const isMe = m.user_id === userId
           const time = new Date(m.created_at).toLocaleTimeString('sv-SE', {
