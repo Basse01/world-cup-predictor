@@ -2,7 +2,12 @@
 self.addEventListener('push', event => {
   if (!event.data) return
 
-  const { title, body, url } = event.data.json()
+  let title, body, url
+  try {
+    ({ title, body, url } = event.data.json())
+  } catch {
+    return
+  }
 
   event.waitUntil(
     self.registration.showNotification(title, {

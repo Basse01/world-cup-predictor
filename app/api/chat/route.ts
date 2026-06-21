@@ -70,17 +70,19 @@ async function sendChatPush(senderId: string, content: string): Promise<void> {
     const senderName = senderProfile?.display_name ?? 'Någon'
     const body = content.length > 60 ? content.slice(0, 57) + '…' : content
 
-    await sendPushToUsers(eligibleIds, {
+    const notifiedIds = await sendPushToUsers(eligibleIds, {
       title: `💬 ${senderName}`,
       body,
       url: '/dashboard',
     })
 
-    // Update throttle timestamp for notified users
-    await admin
-      .from('profiles')
-      .update({ last_chat_push_at: new Date().toISOString() })
-      .in('id', eligibleIds)
+    // Only throttle users whose push was actually accepted by the push service
+    if (notifiedIds.length > 0) {
+      await admin
+        .from('profiles')
+        .update({ last_chat_push_at: new Date().toISOString() })
+        .in('id', notifiedIds)
+    }
   } catch (err) {
     console.error('[sendChatPush] unexpected error:', JSON.stringify(err))
     // Never let push errors propagate — the message was already saved
