@@ -10,6 +10,19 @@ export default async function DashboardPage() {
   const [supabase, user] = await Promise.all([createClient(), getUser()])
   if (!user) redirect('/login')
 
+  // Matchday window: 08:00 Stockholm → 08:00 Stockholm next day
+  const nowMs = Date.now()
+  const nowDate = new Date(nowMs)
+  const stockholmFakeUTC = new Date(nowDate.toLocaleString('en-US', { timeZone: 'Europe/Stockholm' })).getTime()
+  const offsetMs = nowMs - stockholmFakeUTC
+  const stockholmDateStr = nowDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Stockholm' })
+  const [syear, smonth, sday] = stockholmDateStr.split('-').map(Number)
+  const today8amStockholmUTC = new Date(Date.UTC(syear, smonth - 1, sday, 8, 0, 0) + offsetMs)
+  const windowStart = today8amStockholmUTC.getTime() <= nowMs
+    ? today8amStockholmUTC
+    : new Date(today8amStockholmUTC.getTime() - 86400000)
+  const windowEnd = new Date(windowStart.getTime() + 86400000)
+
   const [
     { data: profile },
     { data: liveMatches },
@@ -23,7 +36,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase.from('profiles').select('display_name').eq('id', user.id).single(),
     supabase.from('matches').select('*').eq('status', 'live').order('kickoff_at'),
-    supabase.from('matches').select('*').eq('status', 'scheduled').order('kickoff_at').limit(3),
+    supabase.from('matches').select('*').eq('status', 'scheduled').gte('kickoff_at', nowDate.toISOString()).lt('kickoff_at', windowEnd.toISOString()).order('kickoff_at'),
     supabase.from('standings').select('*').order('rank').limit(5),
     supabase.from('standings').select('total_points, rank').eq('user_id', user.id).single(),
     supabase.from('matches')
@@ -115,7 +128,15 @@ export default async function DashboardPage() {
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-xl text-wc-light-gray uppercase tracking-wide">Nästa matcher</h2>
+          <div>
+            <h2 className="font-display text-xl text-wc-light-gray uppercase tracking-wide">Dagens matcher</h2>
+            {(upcomingMatches ?? []).length > 0 && (() => {
+              const untipped = (upcomingMatches ?? []).filter((m: Match) => !myPredSet.has(m.id)).length
+              return untipped > 0
+                ? <p className="text-xs text-wc-blue mt-0.5">{untipped} matcher kvar att tippa</p>
+                : <p className="text-xs text-wc-green mt-0.5">Alla matcher tippade ✓</p>
+            })()}
+          </div>
           <Link href="/tips/gruppspel" className="text-xs text-wc-blue hover:underline">Alla tips →</Link>
         </div>
         <div className="space-y-2">
@@ -174,7 +195,7 @@ export default async function DashboardPage() {
             )
           })}
           {(upcomingMatches ?? []).length === 0 && (
-            <p className="text-white/50 text-sm">Inga kommande matcher.</p>
+            <p className="text-white/50 text-sm">Inga fler matcher idag — nästa matchdag börjar 08:00.</p>
           )}
         </div>
       </div>
