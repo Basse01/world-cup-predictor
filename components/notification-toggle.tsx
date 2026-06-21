@@ -1,13 +1,24 @@
 'use client'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 
+function isRunningAsStandalone() {
+  if (typeof window === 'undefined') return false
+  return (
+    ('standalone' in navigator && (navigator as { standalone?: boolean }).standalone === true) ||
+    window.matchMedia('(display-mode: standalone)').matches
+  )
+}
+
 export default function NotificationToggle() {
   const { pushState, subscribe, unsubscribe } = usePushNotifications()
 
   if (pushState === 'unsupported') {
+    const standalone = isRunningAsStandalone()
     return (
       <p className="text-xs text-white/40">
-        Push-notiser stöds inte i din webbläsare. Lägg till appen på hemskärmen för att aktivera.
+        {standalone
+          ? 'Push-notiser kräver iOS 16.4 eller senare.'
+          : 'Lägg till appen på hemskärmen för att aktivera push-notiser.'}
       </p>
     )
   }
