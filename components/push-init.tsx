@@ -9,6 +9,7 @@ export default function PushInit() {
     // Only silently re-register if permission is already granted (keeps SW + subscription fresh)
     if (pushState !== 'granted') return
     if (sessionStorage.getItem('push_init_done')) return
+    if (localStorage.getItem('push_opted_out')) return
 
     const timer = setTimeout(async () => {
       const ok = await subscribe()

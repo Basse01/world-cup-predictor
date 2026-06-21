@@ -51,6 +51,8 @@ export function usePushNotifications() {
       const auth = sub.getKey('auth')
       if (!p256dh || !auth) return false
 
+      localStorage.removeItem('push_opted_out')
+
       const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,6 +82,8 @@ export function usePushNotifications() {
         if (sub) await sub.unsubscribe()
       }
       await fetch('/api/push/subscribe', { method: 'DELETE' })
+      localStorage.setItem('push_opted_out', '1')
+      sessionStorage.removeItem('push_init_done')
       setPushState('default')
     } catch {
       // ignore — browser state and DB state may already be clean
