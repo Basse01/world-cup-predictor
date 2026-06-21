@@ -144,10 +144,13 @@ export async function GET(request: Request) {
           })
         }
 
-        await supabase
+        const { error: reminderUpdateError } = await supabase
           .from('matches')
           .update({ reminder_sent_at: nowIso })
           .eq('id', match.id)
+        if (reminderUpdateError) {
+          console.error(`[sync-matches] failed to set reminder_sent_at for match ${match.id}:`, reminderUpdateError.message)
+        }
 
         remindersent++
       }
