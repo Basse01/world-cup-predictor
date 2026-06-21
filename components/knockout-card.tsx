@@ -7,9 +7,10 @@ import { isMatchLocked } from '@/lib/points'
 interface KnockoutCardProps {
   match: Match
   prediction?: Prediction
+  onPickChange?: (matchId: string, hasPick: boolean) => void
 }
 
-export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
+export default function KnockoutCard({ match, prediction, onPickChange }: KnockoutCardProps) {
   const [winnerPick, setWinnerPick] = useState<WinnerPick | null>(prediction?.winner_pick ?? null)
   const [homeScore, setHomeScore] = useState<string>(prediction?.home_score?.toString() ?? '')
   const [awayScore, setAwayScore] = useState<string>(prediction?.away_score?.toString() ?? '')
@@ -43,8 +44,10 @@ export default function KnockoutCard({ match, prediction }: KnockoutCardProps) {
       }),
     })
     setSaving(false)
-    if (res.ok) setSaved(true)
-    else {
+    if (res.ok) {
+      setSaved(true)
+      onPickChange?.(match.id, true)
+    } else {
       setShake(true)
       setTimeout(() => setShake(false), 400)
     }

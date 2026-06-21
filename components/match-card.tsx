@@ -7,9 +7,10 @@ import { isMatchLocked } from '@/lib/points'
 interface MatchCardProps {
   match: Match
   prediction?: Prediction
+  onPickChange?: (matchId: string, hasPick: boolean) => void
 }
 
-export default function MatchCard({ match, prediction }: MatchCardProps) {
+export default function MatchCard({ match, prediction, onPickChange }: MatchCardProps) {
   const [pick, setPick] = useState<Pick1X2 | null>(prediction?.pick ?? null)
   const [saving, setSaving] = useState(false)
   const [shake, setShake] = useState(false)
@@ -29,6 +30,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
     const isDeselect = pick === p
     const prevPick = pick
     setPick(isDeselect ? null : p)
+    onPickChange?.(match.id, !isDeselect)
 
     const res = isDeselect
       ? await fetch('/api/predictions', {
@@ -44,6 +46,7 @@ export default function MatchCard({ match, prediction }: MatchCardProps) {
 
     if (!res.ok) {
       setPick(prevPick)
+      onPickChange?.(match.id, prevPick !== null)
       setShake(true)
       setTimeout(() => setShake(false), 400)
     }
