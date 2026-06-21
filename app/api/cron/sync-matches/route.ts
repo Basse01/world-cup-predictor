@@ -106,14 +106,16 @@ export async function GET(request: Request) {
   // ── Push reminders: notify users who haven't tipped matches locking soon ──
   let remindersent = 0
   if (isMatchWindow) {
-    const in5min = new Date(now.getTime() + 5 * 60 * 1000).toISOString()
+    // Notify 30–35 minutes before kickoff so users have time to tip
+    const in30min = new Date(now.getTime() + 30 * 60 * 1000).toISOString()
+    const in35min = new Date(now.getTime() + 35 * 60 * 1000).toISOString()
 
     const { data: lockingSoon } = await supabase
       .from('matches')
       .select('id, home_team, away_team, stage')
       .eq('status', 'scheduled')
-      .gte('lock_at', nowIso)
-      .lte('lock_at', in5min)
+      .gte('kickoff_at', in30min)
+      .lte('kickoff_at', in35min)
       .is('reminder_sent_at', null)
 
     if (lockingSoon && lockingSoon.length > 0) {

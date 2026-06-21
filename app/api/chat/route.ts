@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 async function sendChatPush(senderId: string, content: string): Promise<void> {
   try {
     const admin = createAdminClient()
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    const fiveMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
 
     // Find all users with push subscriptions except the sender
     const { data: subs } = await admin
