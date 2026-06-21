@@ -27,7 +27,13 @@ export function usePushNotifications() {
       setPushState('unsupported')
       return
     }
-    setPushState(Notification.permission as PushState)
+    const permission = Notification.permission as PushState
+    // If browser permission is granted but user explicitly opted out, show as inactive
+    if (permission === 'granted' && localStorage.getItem('push_opted_out')) {
+      setPushState('default')
+    } else {
+      setPushState(permission)
+    }
   }, [])
 
   const subscribe = useCallback(async (): Promise<boolean> => {

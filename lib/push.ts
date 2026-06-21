@@ -37,12 +37,16 @@ export async function sendPushToUsers(
     )
   )
 
-  // Remove expired subscriptions (HTTP 410 Gone)
+  // Log failed deliveries and remove expired subscriptions (HTTP 410 Gone)
   const expiredEndpoints = subs
     .filter((_, i) => {
       const r = results[i]
       if (r.status !== 'rejected') return false
-      return (r.reason as { statusCode?: number })?.statusCode === 410
+      const code = (r.reason as { statusCode?: number })?.statusCode
+      if (code !== 410) {
+        console.error(`[push] delivery failed (status ${code}) for ${subs[i].endpoint.slice(0, 50)}:`, JSON.stringify(r.reason))
+      }
+      return code === 410
     })
     .map(s => s.endpoint)
 

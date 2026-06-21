@@ -29,8 +29,7 @@ export async function POST(request: Request) {
     )
 
   if (error) {
-    console.error('[push/subscribe] upsert error:', JSON.stringify(error))
-    return NextResponse.json({ error: error.message, code: error.code, details: error.details, hint: error.hint }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

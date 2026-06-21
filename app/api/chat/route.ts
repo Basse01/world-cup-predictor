@@ -51,7 +51,7 @@ async function sendChatPush(senderId: string, content: string): Promise<void> {
     const subUserIds = [...new Set(subs.map(s => s.user_id as string))]
 
     // Fetch sender name and eligible recipients (not notified in last 5 min) in parallel
-    const [{ data: senderProfile }, { data: eligibleProfiles }] = await Promise.all([
+    const [senderResult, eligibleResult] = await Promise.all([
       admin.from('profiles').select('display_name').eq('id', senderId).single(),
       admin
         .from('profiles')
@@ -59,6 +59,10 @@ async function sendChatPush(senderId: string, content: string): Promise<void> {
         .in('id', subUserIds)
         .or(`last_chat_push_at.is.null,last_chat_push_at.lt.${fiveMinutesAgo}`),
     ])
+    if (senderResult.error) console.error('[sendChatPush] sender query:', JSON.stringify(senderResult.error))
+    if (eligibleResult.error) console.error('[sendChatPush] eligible query:', JSON.stringify(eligibleResult.error))
+    const senderProfile = senderResult.data
+    const eligibleProfiles = eligibleResult.data
 
     if (!eligibleProfiles || eligibleProfiles.length === 0) return
 
@@ -77,7 +81,8 @@ async function sendChatPush(senderId: string, content: string): Promise<void> {
       .from('profiles')
       .update({ last_chat_push_at: new Date().toISOString() })
       .in('id', eligibleIds)
-  } catch {
+  } catch (err) {
+    console.error('[sendChatPush] unexpected error:', JSON.stringify(err))
     // Never let push errors propagate — the message was already saved
   }
 }
