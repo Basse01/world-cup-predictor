@@ -139,6 +139,25 @@ export default async function DashboardPage() {
           </div>
           <Link href="/tips/gruppspel" className="text-xs text-wc-blue hover:underline">Alla tips →</Link>
         </div>
+        {(() => {
+          const untipped = (upcomingMatches ?? []).filter((m: Match) => !myPredSet.has(m.id)).length
+          return untipped > 0 ? (
+            <Link
+              href="/tips/idag"
+              className="flex items-center justify-between bg-wc-blue/10 border border-wc-blue/40 rounded-xl px-4 py-4 mb-3 hover:bg-wc-blue/15 hover:border-wc-blue/70 transition-all active:scale-[0.99]"
+            >
+              <div>
+                <p className="font-display text-wc-light-gray uppercase tracking-wide text-sm">
+                  Tippa på dagens matcher här!
+                </p>
+                <p className="text-white/50 text-xs mt-0.5">{untipped} matcher kvar att tippa</p>
+              </div>
+              <span className="bg-wc-blue text-white font-display text-xs tracking-widest uppercase px-3 py-2 rounded-lg flex-shrink-0">
+                Tippa nu →
+              </span>
+            </Link>
+          ) : null
+        })()}
         <div className="space-y-2">
           {(upcomingMatches ?? []).map((m: Match) => {
             const ko = new Date(m.kickoff_at)
