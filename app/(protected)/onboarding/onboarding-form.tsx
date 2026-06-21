@@ -322,8 +322,11 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
                 <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide mb-1">
                   Notiser
                 </h3>
-                <p className="text-sm text-white/50 mb-4">
-                  Få en påminnelse innan det är dags att tippa och när någon skriver i chatten.
+                <p className="text-sm text-white/50 mb-2">
+                  Missa aldrig en match — få en påminnelse innan det är dags att tippa.
+                </p>
+                <p className="text-xs text-white/30 mb-4">
+                  Kräver att appen är sparad på hemskärmen (iOS: Dela → Lägg till på hemskärmen).
                 </p>
                 {pushState === 'granted' || pushAsked ? (
                   <div className="flex items-center gap-2 text-wc-green text-sm font-display">
