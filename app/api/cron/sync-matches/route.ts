@@ -36,14 +36,20 @@ export async function GET(request: Request) {
   const now = new Date()
   const in2h = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString()
 
-  const [{ count: liveCount }, { count: upcomingCount }] = await Promise.all([
+  const past3h = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString()
+  const [{ count: liveCount }, { count: upcomingCount }, { count: stuckCount }] = await Promise.all([
     supabase.from('matches').select('*', { count: 'exact', head: true }).eq('status', 'live'),
     supabase.from('matches').select('*', { count: 'exact', head: true })
       .eq('status', 'scheduled')
       .gte('kickoff_at', now.toISOString())
       .lte('kickoff_at', in2h),
+    // Matches that kicked off in the last 3h but are still "scheduled" in DB (missed the live transition)
+    supabase.from('matches').select('*', { count: 'exact', head: true })
+      .eq('status', 'scheduled')
+      .gte('kickoff_at', past3h)
+      .lt('kickoff_at', now.toISOString()),
   ])
-  const isMatchWindow = (liveCount ?? 0) > 0 || (upcomingCount ?? 0) > 0
+  const isMatchWindow = (liveCount ?? 0) > 0 || (upcomingCount ?? 0) > 0 || (stuckCount ?? 0) > 0
 
   // Outside match window: only run at the top of each hour (minute 0–4)
   if (!isMatchWindow && now.getMinutes() >= 5) {
