@@ -52,7 +52,7 @@ export default function LeaderboardTable({ initial, userId }: { initial: Standin
                 }`}
               >
                 <td className={`px-4 py-3 font-display text-lg ${medalColors[i] ?? 'text-white/50'}`}>
-                  {s.rank}
+                  {i + 1}
                 </td>
                 <td className="px-4 py-3">
                   <Link
