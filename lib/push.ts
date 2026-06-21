@@ -44,15 +44,19 @@ export async function sendPushToUsers(
 
   results.forEach((r, i) => {
     const sub = subs[i]
+    const endpointShort = (sub.endpoint as string).slice(-20)
     if (r.status === 'fulfilled') {
+      const statusCode = (r.value as { statusCode?: number })?.statusCode ?? '?'
+      console.log(`[push] OK ${statusCode} | ...${endpointShort}`)
       notifiedUserIds.push(sub.user_id as string)
     } else {
       const code = (r.reason as { statusCode?: number })?.statusCode
       if (code === 410) {
+        console.log(`[push] 410 expired | ...${endpointShort}`)
         expiredEndpoints.push(sub.endpoint)
       } else {
         const reason = (r.reason as { body?: string })?.body ?? JSON.stringify(r.reason)
-        console.error(`[push] FAIL ${code} | ${reason}`)
+        console.error(`[push] FAIL ${code} | ${reason} | ...${endpointShort}`)
       }
     }
   })
