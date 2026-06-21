@@ -251,7 +251,7 @@ export default function Nav({ isAdmin, userId, displayName }: { isAdmin: boolean
                 key={href}
                 href={href}
                 className={`relative flex flex-col items-center justify-center gap-1.5 transition-all active:opacity-60 ${
-                  isActive ? activeColor : 'text-white/40'
+                  isActive ? activeColor : 'text-white/70'
                 }`}
               >
                 {isActive && (
