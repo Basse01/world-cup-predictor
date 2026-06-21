@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import SearchSelect from '@/components/search-select'
 import { WC_PLAYERS } from '@/lib/onboarding-data'
 import type { BonusType, BonusOption } from '@/lib/types'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 
 type FieldType = 'select' | 'players' | 'number' | 'text'
 
@@ -164,6 +165,8 @@ interface Props {
 
 export default function OnboardingForm({ existing, bonusTypes }: Props) {
   const router = useRouter()
+  const { pushState, subscribe } = usePushNotifications()
+  const [pushAsked, setPushAsked] = useState(false)
 
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(bonusTypes.map(b => [b.type, existing[b.type] ?? '']))
@@ -176,6 +179,11 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
     }))
   )
   const [saving, setSaving] = useState(false)
+
+  async function handleEnableNotifications() {
+    await subscribe()
+    setPushAsked(true)
+  }
 
   const now = new Date()
   const isLocked = (bt: BonusTypeWithOptions) => !!(bt.locked_at && new Date(bt.locked_at) <= now)
@@ -304,6 +312,42 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
           </div>
         )
       })}
+
+      {pushState !== 'unsupported' && (
+        <div style={{ animation: 'fade-up 0.4s ease-out 0.5s both' }}>
+          <div className="rounded-xl p-5 border bg-[#1a1a1a] border-[#2a2a2a]">
+            <div className="flex items-start gap-4">
+              <span className="text-2xl leading-none mt-0.5">🔔</span>
+              <div className="flex-1">
+                <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide mb-1">
+                  Notiser
+                </h3>
+                <p className="text-sm text-white/50 mb-4">
+                  Få en påminnelse innan det är dags att tippa och när någon skriver i chatten.
+                </p>
+                {pushState === 'granted' || pushAsked ? (
+                  <div className="flex items-center gap-2 text-wc-green text-sm font-display">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Notiser aktiverade
+                  </div>
+                ) : pushState === 'denied' ? (
+                  <p className="text-xs text-white/30">Notiser är blockerade i din webbläsare — du kan aktivera dem i inställningarna.</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleEnableNotifications}
+                    className="px-5 py-2.5 rounded-lg bg-wc-blue/10 border border-wc-blue/30 text-wc-blue text-sm font-display uppercase tracking-wide hover:bg-wc-blue/20 transition-colors active:scale-95"
+                  >
+                    Aktivera notiser
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ animation: 'fade-up 0.4s ease-out 0.55s both' }} className="pt-2">
         <button

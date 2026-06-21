@@ -6,16 +6,14 @@ export default function PushInit() {
   const { pushState, subscribe } = usePushNotifications()
 
   useEffect(() => {
-    if (pushState === 'unsupported' || pushState === 'denied') return
+    // Only silently re-register if permission is already granted (keeps SW + subscription fresh)
+    if (pushState !== 'granted') return
     if (sessionStorage.getItem('push_init_done')) return
 
-    // Already granted: silently re-register SW and refresh subscription
-    // Not yet asked: wait 3 s before prompting (less intrusive than immediate)
-    const delay = pushState === 'granted' ? 0 : 3000
     const timer = setTimeout(async () => {
       const ok = await subscribe()
       if (ok) sessionStorage.setItem('push_init_done', '1')
-    }, delay)
+    }, 0)
 
     return () => clearTimeout(timer)
   }, [pushState, subscribe])
