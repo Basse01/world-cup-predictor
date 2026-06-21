@@ -190,36 +190,38 @@ export default async function DashboardPage() {
               return (
                 <div
                   key={m.id}
-                  className="bg-[#1a1a1a] rounded-lg px-4 py-3.5 flex items-center gap-3"
+                  className="bg-[#1a1a1a] rounded-xl px-4 py-4 flex items-center border border-[#252525]"
                 >
-                  {/* Home */}
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {m.home_team_logo && (
+                  {/* Mirror spacer */}
+                  <div className="w-[62px] flex-shrink-0" aria-hidden="true" />
+
+                  {/* Flags + score — centered */}
+                  <div className="flex-1 flex items-center justify-center gap-5">
+                    {m.home_team_logo
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.home_team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
-                    )}
-                    <span className="text-wc-light-gray text-sm truncate">{m.home_team}</span>
-                  </div>
-                  {/* Score */}
-                  <span className="font-display text-base text-wc-light-gray flex-shrink-0">
-                    {m.home_score}–{m.away_score}
-                  </span>
-                  {/* Away */}
-                  <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                    <span className="text-wc-light-gray text-sm truncate text-right">{m.away_team}</span>
-                    {m.away_team_logo && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.away_team_logo} alt="" className="w-5 h-5 object-contain flex-shrink-0" />
-                    )}
-                  </div>
-                  {/* Points */}
-                  {pred ? (
-                    <span className={`text-sm font-display flex-shrink-0 w-10 text-right ${(pred.points_awarded ?? 0) > 0 ? 'text-wc-green' : 'text-white/40'}`}>
-                      {(pred.points_awarded ?? 0) > 0 ? `+${pred.points_awarded}p` : '0p'}
+                      ? <img src={m.home_team_logo} alt={m.home_team} title={m.home_team} className="w-10 h-10 object-contain flex-shrink-0" />
+                      : <div className="w-10 h-10 bg-white/10 rounded-full flex-shrink-0" />
+                    }
+                    <span className="font-display text-xl text-wc-light-gray flex-shrink-0">
+                      {m.home_score}–{m.away_score}
                     </span>
-                  ) : (
-                    <span className="text-xs text-white/40 flex-shrink-0">(inget tips)</span>
-                  )}
+                    {m.away_team_logo
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={m.away_team_logo} alt={m.away_team} title={m.away_team} className="w-10 h-10 object-contain flex-shrink-0" />
+                      : <div className="w-10 h-10 bg-white/10 rounded-full flex-shrink-0" />
+                    }
+                  </div>
+
+                  {/* Points */}
+                  <div className="w-[62px] flex-shrink-0 flex justify-end">
+                    {pred ? (
+                      <span className={`text-sm font-display ${(pred.points_awarded ?? 0) > 0 ? 'text-wc-green' : 'text-white/30'}`}>
+                        {(pred.points_awarded ?? 0) > 0 ? `+${pred.points_awarded}p` : '0p'}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-white/25">–</span>
+                    )}
+                  </div>
                 </div>
               )
             })}
