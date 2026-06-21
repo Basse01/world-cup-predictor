@@ -44,7 +44,8 @@ export async function sendPushToUsers(
       if (r.status !== 'rejected') return false
       const code = (r.reason as { statusCode?: number })?.statusCode
       if (code !== 410) {
-        console.error(`[push] delivery failed (status ${code}) for ${subs[i].endpoint.slice(0, 50)}:`, JSON.stringify(r.reason))
+        const reason = (r.reason as { body?: string })?.body ?? JSON.stringify(r.reason)
+        console.error(`[push] FAIL ${code} | ${reason}`)
       }
       return code === 410
     })
