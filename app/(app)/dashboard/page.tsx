@@ -125,42 +125,52 @@ export default async function DashboardPage() {
               ? `/tips/gruppspel/${m.group_name}#${m.id}`
               : '/tips/slutspel'
             const hasPred = myPredSet.has(m.id)
+            const isToday = ko.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }) === new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })
+            const dayLabel = isToday ? 'Idag' : ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Stockholm' })
             return (
               <Link
                 key={m.id}
                 href={tipsHref}
-                className="bg-[#1a1a1a] rounded-lg px-4 py-3.5 flex items-center gap-3 hover:bg-[#222] active:bg-[#252525] transition-colors"
+                className={`rounded-xl px-4 py-3.5 flex items-center gap-3 transition-all active:scale-[0.99]
+                  ${hasPred
+                    ? 'bg-[#1a1a1a] border border-[#252525] hover:bg-[#1e1e1e]'
+                    : 'bg-[#111a24] border border-wc-blue/40 hover:border-wc-blue/70 hover:bg-[#131e2a]'
+                  }`}
               >
-                {/* Home team */}
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  {m.home_team_logo && (
+                {/* Home flag */}
+                <div className="flex-shrink-0">
+                  {m.home_team_logo
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.home_team_logo} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
-                  )}
-                  <span className="text-wc-light-gray text-sm truncate">{m.home_team}</span>
+                    ? <img src={m.home_team_logo} alt={m.home_team} title={m.home_team} className="w-10 h-10 object-contain" />
+                    : <div className="w-10 h-10 bg-white/10 rounded-full" />
+                  }
                 </div>
-                {/* Time */}
-                <div className="text-center flex-shrink-0">
-                  <span className="text-xs text-white/50 whitespace-nowrap">
-                    {ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Stockholm' })}
-                    {' '}
+
+                {/* Time block */}
+                <div className="flex-1 text-center">
+                  <div className="text-[10px] text-white/40 uppercase tracking-widest font-display">{dayLabel}</div>
+                  <div className="font-display text-xl text-wc-light-gray leading-tight">
                     {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })}
-                  </span>
+                  </div>
                 </div>
-                {/* Away team */}
-                <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                  <span className="text-wc-light-gray text-sm truncate text-right">{m.away_team}</span>
-                  {m.away_team_logo && (
+
+                {/* Away flag */}
+                <div className="flex-shrink-0">
+                  {m.away_team_logo
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.away_team_logo} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
-                  )}
+                    ? <img src={m.away_team_logo} alt={m.away_team} title={m.away_team} className="w-10 h-10 object-contain" />
+                    : <div className="w-10 h-10 bg-white/10 rounded-full" />
+                  }
                 </div>
-                {/* Bet indicator */}
-                <div className="flex-shrink-0 ml-1">
+
+                {/* CTA */}
+                <div className="flex-shrink-0 w-16 flex justify-end">
                   {hasPred ? (
-                    <span className="text-wc-green text-xs">✓</span>
+                    <span className="text-wc-green text-sm">✓</span>
                   ) : (
-                    <span className="text-wc-blue text-xs font-display">Tippa →</span>
+                    <span className="bg-wc-blue text-white text-xs font-display tracking-widest uppercase px-3 py-1.5 rounded-lg">
+                      Tippa
+                    </span>
                   )}
                 </div>
               </Link>
