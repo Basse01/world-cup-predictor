@@ -30,7 +30,10 @@ export async function POST(request: Request) {
       { onConflict: 'endpoint' }
     )
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[push/subscribe] upsert error:', error.code, error.message, error.details)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }
