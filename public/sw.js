@@ -9,22 +9,13 @@ self.addEventListener('push', event => {
     return
   }
 
-  url = url ?? '/dashboard'
-
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      // If the app is open and visible, send an in-app toast instead of (or in addition to) OS notification
-      const visibleClients = windowClients.filter(c => c.visibilityState === 'visible')
-      visibleClients.forEach(c => c.postMessage({ type: 'PUSH_TOAST', title, body, url }))
-
-      // Always show the OS notification (for background / lock screen)
-      return self.registration.showNotification(title, {
-        body,
-        icon: '/icon.png',
-        badge: '/icon.png',
-        data: { url },
-        vibrate: [200, 100, 200],
-      })
+    self.registration.showNotification(title, {
+      body,
+      icon: '/icon.png',
+      badge: '/icon.png',
+      data: { url: url ?? '/dashboard' },
+      vibrate: [200, 100, 200],
     })
   )
 })
