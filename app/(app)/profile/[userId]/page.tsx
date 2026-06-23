@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import BonusForm from '@/components/bonus-form'
 import BackButton from '@/components/back-button'
 import NotificationToggle from '@/components/notification-toggle'
+import DisplayNameForm from '@/components/display-name-form'
 import type { BonusType, BonusPrediction, BonusOption } from '@/lib/types'
 
 function fmtShort(iso: string) {
@@ -144,6 +145,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
       {/* Bonus section — editable if own profile, read-only otherwise */}
       {isMe ? (
         <>
+          {/* Profile settings */}
+          <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-[#2a2a2a]">
+            <h2 className="font-display text-sm uppercase tracking-widest text-white/50 mb-4">
+              Profil
+            </h2>
+            <DisplayNameForm current={profile.display_name} />
+          </div>
+
           {/* Notification settings */}
           <div className="bg-[#1a1a1a] rounded-2xl p-5 border border-[#2a2a2a]">
             <h2 className="font-display text-sm uppercase tracking-widest text-white/50 mb-4">
