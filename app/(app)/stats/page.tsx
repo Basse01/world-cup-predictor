@@ -9,7 +9,7 @@ export default async function StatsPage() {
   const [{ data: goalEvents }, { count: totalGoals }] = await Promise.all([
     supabase
       .from('match_events')
-      .select('player_name, team_name, team_logo')
+      .select('player_name, player_id, team_name, team_logo')
       .eq('type', 'Goal')
       .neq('detail', 'Own Goal')
       .neq('detail', 'Missed Penalty')
@@ -22,20 +22,25 @@ export default async function StatsPage() {
       .neq('detail', 'Missed Penalty'),
   ])
 
-  // Aggregate goals per player in JS (WC has <500 goal events)
-  const playerMap = new Map<string, { team: string; teamLogo: string | null; goals: number }>()
+  // Aggregate goals per player in JS (WC has <500 goal events).
+  // Group by stable api-football player_id when present — player NAMES vary between
+  // fixtures ("Kylian Mbappé" vs "K. Mbappe") and would otherwise split the same
+  // scorer into two rows. Fall back to name for legacy rows without a player_id.
+  const playerMap = new Map<string, { name: string; team: string; teamLogo: string | null; goals: number }>()
   for (const e of goalEvents ?? []) {
     if (!e.player_name) continue
-    const existing = playerMap.get(e.player_name)
+    const key = e.player_id != null ? `id:${e.player_id}` : `name:${e.player_name}`
+    const existing = playerMap.get(key)
     if (existing) {
       existing.goals++
+      // Prefer the fullest available name for display (e.g. "Kylian Mbappé" over "K. Mbappe")
+      if (e.player_name.length > existing.name.length) existing.name = e.player_name
     } else {
-      playerMap.set(e.player_name, { team: e.team_name, teamLogo: e.team_logo, goals: 1 })
+      playerMap.set(key, { name: e.player_name, team: e.team_name, teamLogo: e.team_logo, goals: 1 })
     }
   }
 
-  const scorers = Array.from(playerMap.entries())
-    .map(([name, data]) => ({ name, ...data }))
+  const scorers = Array.from(playerMap.values())
     .sort((a, b) => b.goals - a.goals)
 
   const medalColors = ['text-yellow-400', 'text-gray-400', 'text-amber-600']
@@ -73,7 +78,7 @@ export default async function StatsPage() {
               <tbody>
                 {scorers.map((s, i) => (
                   <tr
-                    key={s.name}
+                    key={i}
                     className={`border-b border-[#1a1a1a] transition-colors ${
                       i === 0 ? 'bg-[#1a1f1a] hover:bg-[#1e231e]' : 'bg-[#111] hover:bg-[#1a1a1a]'
                     }`}

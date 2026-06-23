@@ -81,6 +81,7 @@ export interface MatchEvent {
   team_name: string
   team_logo: string | null
   player_name: string | null
+  player_id: number | null
   assist_name: string | null
   type: string
   detail: string | null

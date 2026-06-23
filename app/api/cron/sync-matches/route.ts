@@ -227,6 +227,7 @@ export async function GET(request: Request) {
               team_name: e.team.name,
               team_logo: e.team.logo ?? null,
               player_name: e.player.name ?? null,
+              player_id: e.player.id ?? null,
               assist_name: e.assist.name ?? null,
               type: e.type,
               detail: e.detail ?? null,
