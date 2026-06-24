@@ -32,27 +32,38 @@ export default function MatchCard({ match, prediction, onPickChange }: MatchCard
     setPick(isDeselect ? null : p)
     onPickChange?.(match.id, !isDeselect)
 
-    const res = isDeselect
-      ? await fetch('/api/predictions', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ match_id: match.id }),
-        })
-      : await fetch('/api/predictions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ match_id: match.id, pick: p }),
-        })
-
-    if (!res.ok) {
+    const revert = () => {
       setPick(prevPick)
       onPickChange?.(match.id, prevPick !== null)
       setShake(true)
       setTimeout(() => setShake(false), 400)
     }
 
-    savingRef.current = false
-    setSaving(false)
+    try {
+      const res = isDeselect
+        ? await fetch('/api/predictions', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ match_id: match.id }),
+          })
+        : await fetch('/api/predictions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ match_id: match.id, pick: p }),
+          })
+
+      // Server rejected it (e.g. match locked) — roll back the optimistic pick.
+      if (!res.ok) revert()
+    } catch {
+      // Network/request threw (offline, timeout, cold start). Roll back so the
+      // user sees the pick bounce + shake instead of a green button that never
+      // actually saved.
+      revert()
+    } finally {
+      // Always release the lock so a flaky save can be retried — never freeze the card.
+      savingRef.current = false
+      setSaving(false)
+    }
   }
 
   const baseBtn = 'flex-1 py-2.5 min-h-[44px] rounded-lg font-display tracking-widest text-lg transition-all duration-150 border-2'

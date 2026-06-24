@@ -33,23 +33,32 @@ export default function KnockoutCard({ match, prediction, onPickChange }: Knocko
     }
     setSaving(true)
     setSaved(false)
-    const res = await fetch('/api/predictions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        match_id: match.id,
-        winner_pick: winnerPick,
-        home_score: parseInt(homeScore),
-        away_score: parseInt(awayScore),
-      }),
-    })
-    setSaving(false)
-    if (res.ok) {
-      setSaved(true)
-      onPickChange?.(match.id, true)
-    } else {
+    const fail = () => {
       setShake(true)
       setTimeout(() => setShake(false), 400)
+    }
+    try {
+      const res = await fetch('/api/predictions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          match_id: match.id,
+          winner_pick: winnerPick,
+          home_score: parseInt(homeScore),
+          away_score: parseInt(awayScore),
+        }),
+      })
+      if (res.ok) {
+        setSaved(true)
+        onPickChange?.(match.id, true)
+      } else {
+        fail()
+      }
+    } catch {
+      // Network/request threw — show the shake instead of a button stuck on "Sparar...".
+      fail()
+    } finally {
+      setSaving(false)
     }
   }
 
