@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import KnockoutCard from './knockout-card'
 import type { Match, Prediction } from '@/lib/types'
 import { STAGE_LABELS } from '@/lib/knockout'
@@ -13,6 +13,8 @@ interface Props {
 }
 
 export default function KnockoutMatchSheet({ match, prediction, preview, onClose, onPickChange }: Props) {
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Lock body scroll + close on Escape while the sheet is open.
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -22,8 +24,19 @@ export default function KnockoutMatchSheet({ match, prediction, preview, onClose
     return () => {
       document.body.style.overflow = prev
       window.removeEventListener('keydown', onKey)
+      if (closeTimer.current) clearTimeout(closeTimer.current)
     }
   }, [onClose])
+
+  // After a successful save, briefly show the confirmation then close the sheet.
+  function handlePick(
+    matchId: string,
+    hasPick: boolean,
+    values?: Pick<Prediction, 'winner_pick' | 'home_score' | 'away_score'>,
+  ) {
+    onPickChange?.(matchId, hasPick, values)
+    if (hasPick) closeTimer.current = setTimeout(onClose, 700)
+  }
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end sm:items-center sm:justify-center">
@@ -59,7 +72,7 @@ export default function KnockoutMatchSheet({ match, prediction, preview, onClose
           </button>
         </div>
 
-        <KnockoutCard match={match} prediction={prediction} preview={preview} onPickChange={onPickChange} />
+        <KnockoutCard match={match} prediction={prediction} preview={preview} onPickChange={handlePick} />
       </div>
     </div>
   )
