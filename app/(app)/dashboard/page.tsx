@@ -163,7 +163,7 @@ export default async function DashboardPage() {
             const ko = new Date(m.kickoff_at)
             const tipsHref = m.stage === 'group'
               ? `/tips/gruppspel/${m.group_name}#${m.id}`
-              : '/tips/slutspel'
+              : `/tips/slutspel?match=${m.id}`
             const hasPred = myPredSet.has(m.id)
             const isToday = ko.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }) === new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })
             const dayLabel = isToday ? 'Idag' : ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Stockholm' })

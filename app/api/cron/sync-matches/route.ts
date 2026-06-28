@@ -93,8 +93,12 @@ export async function GET(request: Request) {
       api_status: f.fixture.status.short,
       elapsed_minutes: f.fixture.status.elapsed ?? null,
       stage,
-      home_score: f.score.fulltime.home ?? f.goals.home,
-      away_score: f.score.fulltime.away ?? f.goals.away,
+      // Store the result after 90 min + extra time, EXCLUDING penalties.
+      // `goals` is the running/final scoreline incl. extra time (pens live in
+      // score.penalty); `score.fulltime` is the 90-min-only score, so it must
+      // only be a fallback — otherwise an extra-time winner gets scored wrong.
+      home_score: f.goals.home ?? f.score.fulltime.home,
+      away_score: f.goals.away ?? f.score.fulltime.away,
       group_name: groupName,
       penalty_winner: penaltyWinner,
       updated_at: nowIso,

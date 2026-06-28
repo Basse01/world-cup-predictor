@@ -14,17 +14,39 @@ describe('calcGroupPoints', () => {
   })
 })
 
-describe('calcKnockoutPoints', () => {
-  it('awards 5 for correct winner and exact score', () => {
-    expect(calcKnockoutPoints('home', 2, 1, 2, 1)).toBe(5)
+describe('calcKnockoutPoints (contrarian pot + exact bonus)', () => {
+  const win = { winnerPick: 'home', actualWinner: 'home', actualHome: 2, actualAway: 1 } as const
+
+  it('chalk: everyone took the winner → 2p, no pot bonus', () => {
+    expect(calcKnockoutPoints({ ...win, guessHome: 3, guessAway: 1, totalTippers: 10, sameWinnerCount: 10 })).toBe(2)
   })
 
-  it('awards 2 for correct winner but wrong score', () => {
-    expect(calcKnockoutPoints('home', 2, 1, 3, 1)).toBe(2)
+  it('chalk + exact → 7p (2 pot + 5)', () => {
+    expect(calcKnockoutPoints({ ...win, guessHome: 2, guessAway: 1, totalTippers: 10, sameWinnerCount: 10 })).toBe(7)
   })
 
-  it('awards 0 for wrong winner', () => {
-    expect(calcKnockoutPoints('away', 2, 1, 2, 1)).toBe(0)
+  it('half went the other way, right → 6p', () => {
+    expect(calcKnockoutPoints({ ...win, guessHome: 3, guessAway: 1, totalTippers: 18, sameWinnerCount: 9 })).toBe(6)
+  })
+
+  it('lone correct (17 of 18 against) → 10p', () => {
+    expect(calcKnockoutPoints({ ...win, guessHome: 3, guessAway: 1, totalTippers: 18, sameWinnerCount: 1 })).toBe(10)
+  })
+
+  it('lone correct + exact → 15p', () => {
+    expect(calcKnockoutPoints({ ...win, guessHome: 2, guessAway: 1, totalTippers: 18, sameWinnerCount: 1 })).toBe(15)
+  })
+
+  it('wrong winner → 0p', () => {
+    expect(calcKnockoutPoints({ ...win, winnerPick: 'away', guessHome: 2, guessAway: 1, totalTippers: 18, sameWinnerCount: 9 })).toBe(0)
+  })
+
+  it('penalty advance: tied score, picked the advancer → pot only', () => {
+    // 1-1 after ET, home advanced on penalties; 9 of 18 picked home.
+    expect(calcKnockoutPoints({
+      winnerPick: 'home', actualWinner: 'home', actualHome: 1, actualAway: 1,
+      guessHome: 0, guessAway: 0, totalTippers: 18, sameWinnerCount: 9,
+    })).toBe(6)
   })
 })
 
