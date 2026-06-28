@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Match, MatchEvent, Standing, Prediction } from '@/lib/types'
 import LiveMatchBanner from '@/components/live-match-banner'
 import TodayMatchTipper from '@/components/today-match-tipper'
+import { TOTAL_KNOCKOUT_MATCHES } from '@/lib/wc2026-bracket'
 
 const KNOCKOUT_STAGES = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'final']
 
@@ -65,7 +66,9 @@ export default async function DashboardPage() {
   const myPredSet = new Set(myPredictions?.map(p => p.match_id) ?? [])
   const groupTotal = groupMatchIds?.length ?? 0
   const groupDone = groupMatchIds?.filter(m => myPredSet.has(m.id)).length ?? 0
-  const knockoutTotal = knockoutMatchIds?.length ?? 0
+  // Show the full bracket (32) as the total so the scope is clear from the start,
+  // even before the later rounds' fixtures exist. Done = tipped existing matches.
+  const knockoutTotal = TOTAL_KNOCKOUT_MATCHES
   const knockoutDone = knockoutMatchIds?.filter(m => myPredSet.has(m.id)).length ?? 0
   const predByMatch = new Map(myPredictions?.map(p => [p.match_id, p]) ?? [])
 

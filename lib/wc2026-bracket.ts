@@ -72,3 +72,8 @@ export const KNOCKOUT_SLOTS: KnockoutSlot[] = [
 export const apiIdToMatchNo = new Map<number, number>(
   KNOCKOUT_SLOTS.filter(s => s.apiMatchId).map(s => [s.apiMatchId!, s.id]),
 )
+
+// Total tippable knockout matches across the whole bracket (R32 16 + R16 8 +
+// QF 4 + SF 2 + bronze 1 + final 1 = 32). Used as the slutspel progress total
+// so the scope is shown from the start, before later rounds are drawn.
+export const TOTAL_KNOCKOUT_MATCHES = KNOCKOUT_SLOTS.length
