@@ -43,8 +43,8 @@ export default function KnockoutCard({ match, prediction, preview, onPickChange 
 
   async function handleSave() {
     if (locked || saving) return
-    if (!winnerPick || homeScore === '' || awayScore === '') {
-      setError(!winnerPick ? 'Välj vilket lag som går vidare.' : 'Fyll i ett resultat.')
+    if (!winnerPick) {
+      setError('Välj vilket lag som går vidare.')
       setShake(true)
       setTimeout(() => setShake(false), 400)
       return
@@ -53,7 +53,13 @@ export default function KnockoutCard({ match, prediction, preview, onPickChange 
     setSaving(true)
     setSaved(false)
     const fail = () => { setShake(true); setTimeout(() => setShake(false), 400) }
-    const values = { winner_pick: winnerPick, home_score: parseInt(homeScore), away_score: parseInt(awayScore) }
+    // An empty score box counts as 0 (matching the "0" placeholder shown), so a
+    // 0–1 guess saves exactly as written even if a box was left untouched.
+    const values = {
+      winner_pick: winnerPick,
+      home_score: homeScore === '' ? 0 : parseInt(homeScore),
+      away_score: awayScore === '' ? 0 : parseInt(awayScore),
+    }
 
     if (preview) {
       setSaved(true); setSaving(false)

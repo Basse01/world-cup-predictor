@@ -1,8 +1,9 @@
 import { createClient, getUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import type { Match, MatchEvent, Standing } from '@/lib/types'
+import type { Match, MatchEvent, Standing, Prediction } from '@/lib/types'
 import LiveMatchBanner from '@/components/live-match-banner'
+import TodayMatchTipper from '@/components/today-match-tipper'
 
 const KNOCKOUT_STAGES = ['round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'final']
 
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
       .limit(3),
     supabase.from('matches').select('id').eq('stage', 'group'),
     supabase.from('matches').select('id').in('stage', KNOCKOUT_STAGES),
-    supabase.from('predictions').select('match_id, points_awarded').eq('user_id', user.id),
+    supabase.from('predictions').select('*').eq('user_id', user.id),
   ])
 
   // Fetch events for live matches (separate query since IDs needed first)
@@ -158,65 +159,10 @@ export default async function DashboardPage() {
             </Link>
           ) : null
         })()}
-        <div className="space-y-2">
-          {(upcomingMatches ?? []).map((m: Match) => {
-            const ko = new Date(m.kickoff_at)
-            const tipsHref = m.stage === 'group'
-              ? `/tips/gruppspel/${m.group_name}#${m.id}`
-              : `/tips/slutspel?match=${m.id}`
-            const hasPred = myPredSet.has(m.id)
-            const isToday = ko.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }) === new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })
-            const dayLabel = isToday ? 'Idag' : ko.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Stockholm' })
-            return (
-              <Link
-                key={m.id}
-                href={tipsHref}
-                className={`rounded-xl px-4 py-4 flex items-center transition-all active:scale-[0.99]
-                  ${hasPred
-                    ? 'bg-[#1a1a1a] border border-[#252525] hover:bg-[#1e1e1e]'
-                    : 'bg-[#111a24] border border-wc-blue/40 hover:border-wc-blue/70 hover:bg-[#131e2a]'
-                  }`}
-              >
-                {/* Mirror spacer — same width as CTA so center block is truly centered */}
-                <div className="w-[62px] flex-shrink-0" aria-hidden="true" />
-
-                {/* Flags + time — centered */}
-                <div className="flex-1 flex items-center justify-center gap-5">
-                  {m.home_team_logo
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={m.home_team_logo} alt={m.home_team} title={m.home_team} className="w-10 h-10 object-contain flex-shrink-0" />
-                    : <div className="w-10 h-10 bg-white/10 rounded-full flex-shrink-0" />
-                  }
-                  <div className="text-center">
-                    <div className="text-[10px] text-white/40 uppercase tracking-widest font-display">{dayLabel}</div>
-                    <div className="font-display text-xl text-wc-light-gray leading-tight">
-                      {ko.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Stockholm' })}
-                    </div>
-                  </div>
-                  {m.away_team_logo
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={m.away_team_logo} alt={m.away_team} title={m.away_team} className="w-10 h-10 object-contain flex-shrink-0" />
-                    : <div className="w-10 h-10 bg-white/10 rounded-full flex-shrink-0" />
-                  }
-                </div>
-
-                {/* CTA */}
-                <div className="w-[62px] flex-shrink-0 flex justify-end">
-                  {hasPred ? (
-                    <span className="text-wc-green text-lg">✓</span>
-                  ) : (
-                    <span className="bg-wc-blue text-white text-xs font-display tracking-widest uppercase px-3 py-1.5 rounded-lg whitespace-nowrap">
-                      Tippa
-                    </span>
-                  )}
-                </div>
-              </Link>
-            )
-          })}
-          {(upcomingMatches ?? []).length === 0 && (
-            <p className="text-white/50 text-sm">Inga fler matcher idag — nästa matchdag börjar 08:00.</p>
-          )}
-        </div>
+        <TodayMatchTipper
+          matches={(upcomingMatches ?? []) as Match[]}
+          predictions={(myPredictions ?? []) as Prediction[]}
+        />
       </div>
 
       {(recentMatches ?? []).length > 0 && (
