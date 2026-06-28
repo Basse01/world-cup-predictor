@@ -50,6 +50,14 @@ export async function POST(request: Request) {
     if (!Number.isInteger(home_score) || !Number.isInteger(away_score) || home_score < 0 || away_score < 0) {
       return NextResponse.json({ error: 'Scores must be non-negative integers' }, { status: 400 })
     }
+    // The result must not contradict the advancing team. A draw is allowed
+    // (penalties decide), but the picked winner can't lose in regulation.
+    if (
+      (winner_pick === 'home' && home_score < away_score) ||
+      (winner_pick === 'away' && away_score < home_score)
+    ) {
+      return NextResponse.json({ error: 'Result contradicts winner_pick' }, { status: 400 })
+    }
   }
 
   const payload =

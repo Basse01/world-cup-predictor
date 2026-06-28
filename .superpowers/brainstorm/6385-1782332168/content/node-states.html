@@ -1,0 +1,116 @@
+<h2>Nod-tillstånd + vad som fyller framtida noder</h2>
+<p class="subtitle">Vänster: hur en match ser ut i sina olika lägen (samma språk i bracket & omgångar). Höger: den stora frågan — vad visas i rundor som ännu inte spelats?</p>
+
+<style>
+  .wrap { display:flex; gap:34px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col-title { font-family:'Anton',sans-serif; font-size:12px; color:#D1D4D1; letter-spacing:.06em; text-transform:uppercase; margin:0 0 12px; }
+  .legend { width:250px; }
+  .item { display:flex; gap:11px; align-items:center; margin-bottom:11px; }
+  .nd { width:120px; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:8px; padding:5px 6px; flex-shrink:0; }
+  .r { display:flex; align-items:center; gap:4px; font-family:'Anton',sans-serif; font-size:9px; color:#888; }
+  .r .fg{ font-size:12px; } .r .sc{ margin-left:auto; font-size:9px; color:#666; }
+  .r.adv{ color:#D1D4D1; } .r.adv .sc{ color:#3CAC3B; }
+  .r.out{ color:#4a4a4a; text-decoration:line-through; }
+  .r.gho{ color:#555; } .r.gho .ph{ width:42px; height:7px; background:#2a2a2a; border-radius:3px; display:inline-block; }
+  .nd.tbd{ border-style:dashed; border-color:#333; }
+  .nd.open{ border-color:#2A398D; box-shadow:0 0 0 2px rgba(42,57,141,.35); }
+  .nd.lock{ opacity:.7; }
+  .nd.done{ border-color:rgba(60,172,59,.4); }
+  .tag{ font-family:'Anton',sans-serif; font-size:8px; letter-spacing:.06em; padding:3px 6px; border-radius:6px; }
+  .desc{ font-size:10.5px; color:#888; line-height:1.4; }
+  .desc b{ color:#D1D4D1; }
+  .pts{ font-family:'Anton',sans-serif; font-size:10px; }
+
+  /* right: projection choice */
+  .choice { display:flex; gap:18px; flex-wrap:wrap; }
+  .pk { cursor:pointer; border:2px solid transparent; border-radius:22px; padding:9px; transition:all .15s; }
+  .pk:hover{ border-color:#2A398D; } .pk.selected{ border-color:#3CAC3B; box-shadow:0 0 0 4px rgba(60,172,59,.15); }
+  .mini { width:182px; background:#111; border:1px solid #2a2a2a; border-radius:16px; padding:11px; }
+  .mh{ display:flex; gap:3px; margin-bottom:5px; } .mh span{ flex:1; text-align:center; font-family:'Anton',sans-serif; font-size:7px; color:#2A398D; } .mh span:first-child{ flex:2; }
+  .mg{ display:flex; gap:4px; height:150px; }
+  .mc2{ display:flex; flex-direction:column; justify-content:space-around; gap:3px; } .mc2.a{ flex:2; } .mc2:not(.a){ flex:1; }
+  .box{ background:#1a1a1a; border:1px solid #2a2a2a; border-radius:5px; padding:2px 3px; }
+  .box.ghost{ border-style:dashed; border-color:#2A398D; background:rgba(42,57,141,.07); }
+  .box.q{ border-style:dashed; border-color:#333; display:flex; align-items:center; justify-content:center; color:#444; font-family:'Anton',sans-serif; font-size:11px; min-height:22px; }
+  .br{ display:flex; align-items:center; gap:2px; font-family:'Anton',sans-serif; font-size:7px; color:#888; } .br .fg{ font-size:8px; }
+  .br.adv{ color:#D1D4D1; } .br.out{ color:#4a4a4a; text-decoration:line-through; } .br.gh{ color:#6477c4; }
+  .cap{ text-align:center; font-size:11px; color:#888; max-width:182px; margin:10px auto 0; line-height:1.5; } .cap b{ color:#D1D4D1; } .cap .rec{ color:#3CAC3B; font-weight:600; }
+  .trf{ text-align:center; font-size:13px; }
+</style>
+
+<div class="wrap">
+
+  <!-- LEFT: node states legend -->
+  <div class="legend">
+    <p class="col-title">Match-nodens lägen</p>
+
+    <div class="item">
+      <div class="nd tbd"><div class="r gho"><span class="ph"></span></div><div class="r gho"><span class="ph"></span></div></div>
+      <div class="desc"><b>TBD</b> · lagen ej klara. Streckad, "väntar". Ej tippbar.</div>
+    </div>
+
+    <div class="item">
+      <div class="nd open"><div class="r"><span class="fg">🇳🇱</span>NED</div><div class="r"><span class="fg">🇲🇽</span>MEX</div></div>
+      <div class="desc"><b>Tippbar</b> · lag klara, ej låst. Blå glöd = <span style="color:#6477c4">tippa nu</span>.</div>
+    </div>
+
+    <div class="item">
+      <div class="nd"><div class="r adv"><span class="fg">🇧🇷</span>BRA<span class="sc">2</span></div><div class="r"><span class="fg">🇰🇷</span>KOR<span class="sc">1</span></div></div>
+      <div class="desc"><b>Tippad</b> · din vinnare markerad + ditt resultat. Ändringsbar tills lås.</div>
+    </div>
+
+    <div class="item">
+      <div class="nd lock"><div class="r adv"><span class="fg">🇧🇷</span>BRA<span class="sc">2</span></div><div class="r"><span class="fg">🇰🇷</span>KOR<span class="sc">1</span></div></div>
+      <div class="desc"><b>Låst</b> 🔒 · 30 min före avspark. Ditt tips visas, ej ändringsbart.</div>
+    </div>
+
+    <div class="item">
+      <div class="nd done"><div class="r adv"><span class="fg">🇧🇷</span>BRA<span class="sc">3</span></div><div class="r out"><span class="fg">🇰🇷</span>KOR<span class="sc">1</span></div></div>
+      <div class="desc"><b>Klar</b> · facit + <span class="pts" style="color:#3CAC3B">+5p</span>/<span class="pts" style="color:#3CAC3B">+2p</span>/<span class="pts" style="color:#888">0p</span>. Förlorare stryks.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: projection vs reality -->
+  <div>
+    <p class="col-title">⭐ Vad fyller framtida rundor?</p>
+    <div class="choice">
+
+      <div class="pk selected" data-choice="reality" onclick="toggleSelect(this)">
+        <div class="mini">
+          <div class="mh"><span>8-DEL</span><span>KV</span><span>SF</span></div>
+          <div class="mg">
+            <div class="mc2 a">
+              <div class="box"><div class="br adv"><span class="fg">🇧🇷</span>BRA</div><div class="br out"><span class="fg">🇰🇷</span>KOR</div></div>
+              <div class="box"><div class="br out"><span class="fg">🇳🇱</span>NED</div><div class="br adv"><span class="fg">🇲🇽</span>MEX</div></div>
+              <div class="box"><div class="br"><span class="fg">🇦🇷</span>ARG</div><div class="br"><span class="fg">🇨🇭</span>SUI</div></div>
+              <div class="box"><div class="br"><span class="fg">🇵🇹</span>POR</div><div class="br"><span class="fg">🇺🇸</span>USA</div></div>
+            </div>
+            <div class="mc2"><div class="box q">?</div><div class="box q">?</div></div>
+            <div class="mc2"><div class="box q">?</div></div>
+          </div>
+        </div>
+        <p class="cap"><span class="rec">★ Min rek.</span> <b>Verklighet</b><br>Framtida noder = <b>?</b> tills riktiga resultat fyller dem. Matchar din per-match-poäng exakt. "Vilka åkt ut" = sanning.</p>
+      </div>
+
+      <div class="pk" data-choice="projection" onclick="toggleSelect(this)">
+        <div class="mini">
+          <div class="mh"><span>8-DEL</span><span>KV</span><span>SF</span></div>
+          <div class="mg">
+            <div class="mc2 a">
+              <div class="box"><div class="br adv"><span class="fg">🇧🇷</span>BRA</div><div class="br out"><span class="fg">🇰🇷</span>KOR</div></div>
+              <div class="box"><div class="br out"><span class="fg">🇳🇱</span>NED</div><div class="br adv"><span class="fg">🇲🇽</span>MEX</div></div>
+              <div class="box"><div class="br adv"><span class="fg">🇦🇷</span>ARG</div><div class="br out"><span class="fg">🇨🇭</span>SUI</div></div>
+              <div class="box"><div class="br out"><span class="fg">🇵🇹</span>POR</div><div class="br adv"><span class="fg">🇺🇸</span>USA</div></div>
+            </div>
+            <div class="mc2"><div class="box ghost"><div class="br gh"><span class="fg">🇧🇷</span>BRA</div><div class="br gh"><span class="fg">🇲🇽</span>MEX</div></div><div class="box ghost"><div class="br gh"><span class="fg">🇦🇷</span>ARG</div><div class="br gh"><span class="fg">🇺🇸</span>USA</div></div></div>
+            <div class="mc2"><div class="box ghost"><div class="br gh"><span class="fg">🇧🇷</span>BRA</div></div></div>
+          </div>
+        </div>
+        <p class="cap"><b>Projektion</b><br>Dina tippade vinnare <b style="color:#6477c4">flödar framåt</b> (streckat) ända till din mästare. Roligare "bracket-challenge", men streckade matcher ger inga poäng — bara navigering.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px">Tillstånden till vänster är bara info. Den enda frågan: <b>Verklighet</b> eller <b>Projektion</b> i framtida noder?</p>

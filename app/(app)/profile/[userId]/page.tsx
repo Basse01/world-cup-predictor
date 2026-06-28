@@ -68,13 +68,17 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
 
   const isMe = user.id === userId
   const allPreds = (preds ?? []) as unknown as PredWithMatch[]
-  const totalPreds = allPreds.length
-  const correctPreds = allPreds.filter(p => (p.points_awarded ?? 0) > 0).length
-  const bonusPointsTotal = bonusPreds?.reduce((sum, b) => sum + (b.points_awarded ?? 0), 0) ?? 0
 
+  // Only count matches that have actually been played. Upcoming tips don't
+  // count toward "rätta tips" until the match is finished, so the ratio is
+  // comparable across users no matter how far ahead they've pre-tipped.
   const historyPreds = allPreds
     .filter(p => p.matches && p.matches.status === 'finished')
     .sort((a, b) => new Date(b.matches!.kickoff_at).getTime() - new Date(a.matches!.kickoff_at).getTime())
+
+  const totalPreds = historyPreds.length
+  const correctPreds = historyPreds.filter(p => (p.points_awarded ?? 0) > 0).length
+  const bonusPointsTotal = bonusPreds?.reduce((sum, b) => sum + (b.points_awarded ?? 0), 0) ?? 0
 
   const medalMap: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
   const rank = standing?.rank ?? null

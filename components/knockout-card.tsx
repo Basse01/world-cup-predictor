@@ -49,10 +49,6 @@ export default function KnockoutCard({ match, prediction, preview, onPickChange 
       setTimeout(() => setShake(false), 400)
       return
     }
-    setError(null)
-    setSaving(true)
-    setSaved(false)
-    const fail = () => { setShake(true); setTimeout(() => setShake(false), 400) }
     // An empty score box counts as 0 (matching the "0" placeholder shown), so a
     // 0–1 guess saves exactly as written even if a box was left untouched.
     const values = {
@@ -60,6 +56,25 @@ export default function KnockoutCard({ match, prediction, preview, onPickChange 
       home_score: homeScore === '' ? 0 : parseInt(homeScore),
       away_score: awayScore === '' ? 0 : parseInt(awayScore),
     }
+
+    // The result must not contradict who you picked to advance. A draw is fine
+    // (penalties decide, and your winner pick says who goes through), but you
+    // can't pick home to advance and then enter a result the away team wins.
+    const contradicts =
+      (winnerPick === 'home' && values.home_score < values.away_score) ||
+      (winnerPick === 'away' && values.away_score < values.home_score)
+    if (contradicts) {
+      const adv = winnerPick === 'home' ? home : away
+      setError(`Resultatet ger motståndaren fler mål än ${adv.name}. Ändra resultatet eller vinnarvalet (oavgjort = straffar är ok).`)
+      setShake(true)
+      setTimeout(() => setShake(false), 400)
+      return
+    }
+
+    setError(null)
+    setSaving(true)
+    setSaved(false)
+    const fail = () => { setShake(true); setTimeout(() => setShake(false), 400) }
 
     if (preview) {
       setSaved(true); setSaving(false)
