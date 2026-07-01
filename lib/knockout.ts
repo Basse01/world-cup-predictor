@@ -90,10 +90,13 @@ export function predictedWinner(prediction?: Prediction): 'home' | 'away' | null
   return prediction?.winner_pick ?? null
 }
 
-// Actual winner of a finished match (by full-time score). null if not decided.
+// Actual winner of a finished knockout match — the team that advanced.
+// Uses the full-time (incl. extra time) score, and falls back to penalty_winner
+// when the score was level and the tie was settled by a shootout. null while the
+// result is still undecided (e.g. a draw whose shootout hasn't synced yet).
 export function actualWinner(match: Match): 'home' | 'away' | null {
   if (match.home_score == null || match.away_score == null) return null
-  if (match.home_score === match.away_score) return null // shootout edge — treat as undecided here
+  if (match.home_score === match.away_score) return match.penalty_winner ?? null
   return match.home_score > match.away_score ? 'home' : 'away'
 }
 

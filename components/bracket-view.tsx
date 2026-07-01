@@ -75,6 +75,18 @@ function GhostRow({ feed }: { feed: number }) {
   )
 }
 
+// A team that has advanced into a not-yet-synced slot (provisional — either a
+// finished result or the user's own tip). Rendered dimmer than a live match row.
+function AdvancerRow({ name, logo }: { name: string | null; logo: string | null }) {
+  const t = teamDisplay(name, logo)
+  return (
+    <div className="flex items-center gap-1 px-1 leading-none text-white/60">
+      <Flag url={t.flagUrl} />
+      <span className="font-display text-[9px] tracking-wide flex-1 truncate">{t.abbr}</span>
+    </div>
+  )
+}
+
 export default function BracketView({ byStage, predOf, onSelect }: Props) {
   const [scale, setScale] = useState(1)
   const [wrapW, setWrapW] = useState(TW)
@@ -93,11 +105,47 @@ export default function BracketView({ byStage, predOf, onSelect }: Props) {
   const byApiId = new Map(r32Matches.map(m => [m.api_match_id, m]))
   const anyMapped = r32Matches.some(m => apiIdToMatchNo.has(m.api_match_id))
   const r32SlotIds = KNOCKOUT_SLOTS.filter(s => s.round === 'r32').map(s => s.id)
+  const slotById = new Map(KNOCKOUT_SLOTS.map(s => [s.id, s]))
+  const STAGE_OF: Record<KnockoutSlot['round'], string> = {
+    r32: 'round_of_32', r16: 'round_of_16', qf: 'quarter_final',
+    sf: 'semi_final', final: 'final', bronze: 'third_place',
+  }
 
+  type Advancer = { name: string; logo: string | null }
+
+  // The fixture occupying a slot. R32 is pinned by api_match_id (or positional in
+  // preview). Later rounds have no such pin, so a fixture is matched to its slot
+  // once its two feeder winners are known and a synced fixture pairs those teams.
   function matchForSlot(slot: KnockoutSlot): Match | undefined {
-    if (slot.round !== 'r32') return undefined // R16+ slots fill in once those fixtures sync
-    if (anyMapped) return byApiId.get(slot.apiMatchId!)
-    return r32Matches[r32SlotIds.indexOf(slot.id)] // preview fallback
+    if (slot.round === 'r32') {
+      if (anyMapped) return byApiId.get(slot.apiMatchId!)
+      return r32Matches[r32SlotIds.indexOf(slot.id)] // preview fallback
+    }
+    if (!slot.feeds) return undefined
+    const a = advancerFrom(slot.feeds[0])
+    const b = advancerFrom(slot.feeds[1])
+    if (!a || !b) return undefined
+    const pool = byStage[STAGE_OF[slot.round]] ?? []
+    return pool.find(m => {
+      const teams = [m.home_team, m.away_team]
+      return teams.includes(a.name) && teams.includes(b.name)
+    })
+  }
+
+  // Who advances out of match number `no` — the actual winner, but only once the
+  // match is finished. Until then the downstream slot keeps its "Vinnare match X"
+  // placeholder. As soon as a real result syncs, the winner flows forward on its
+  // own. Feeds always reference an earlier round, so recursion bottoms out at R32.
+  function advancerFrom(no: number): Advancer | null {
+    const slot = slotById.get(no)
+    if (!slot) return null
+    const match = matchForSlot(slot)
+    if (!match || match.status !== 'finished') return null
+    const side = actualWinner(match)
+    if (!side) return null
+    return side === 'home'
+      ? { name: match.home_team, logo: match.home_team_logo }
+      : { name: match.away_team, logo: match.away_team_logo }
   }
 
   function slotTop(slot: KnockoutSlot) {
@@ -131,12 +179,16 @@ export default function BracketView({ byStage, predOf, onSelect }: Props) {
         </button>
       )
     }
-    // Placeholder slot ("Vinnare match X")
+    // Placeholder slot — show each advancing team once its feeder resolves
+    // (finished result or the user's tip), otherwise "Vinnare match X".
+    const [f0, f1] = slot.feeds!
+    const a0 = advancerFrom(f0)
+    const a1 = advancerFrom(f1)
     return (
       <div style={{ width: CW, height: CH }} className="bg-[#161616] border border-dashed border-[#2a2a2a] rounded-md flex flex-col justify-around overflow-hidden">
-        <GhostRow feed={slot.feeds![0]} />
+        {a0 ? <AdvancerRow name={a0.name} logo={a0.logo} /> : <GhostRow feed={f0} />}
         <div className="h-px bg-white/5" />
-        <GhostRow feed={slot.feeds![1]} />
+        {a1 ? <AdvancerRow name={a1.name} logo={a1.logo} /> : <GhostRow feed={f1} />}
       </div>
     )
   }
