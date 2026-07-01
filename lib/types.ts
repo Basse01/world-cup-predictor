@@ -16,9 +16,11 @@ export interface Match {
   home_score: number | null
   away_score: number | null
   // Knockout only: who advanced when full-time (incl. extra time) was level and
-  // the match went to a penalty shootout. null for group games and any match not
-  // decided on penalties.
+  // the match went to a penalty shootout, plus the shootout scoreline. null for
+  // group games and any match not decided on penalties.
   penalty_winner: WinnerPick | null
+  penalty_home: number | null
+  penalty_away: number | null
   group_name: string | null
   lock_at: string
   elapsed_minutes: number | null

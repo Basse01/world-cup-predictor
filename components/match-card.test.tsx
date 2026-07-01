@@ -17,6 +17,8 @@ function makeMatch(overrides: Partial<Match> = {}): Match {
     home_score: null,
     away_score: null,
     penalty_winner: null,
+    penalty_home: null,
+    penalty_away: null,
     group_name: 'A',
     // not locked: 50 minutes in the future
     lock_at: new Date(Date.now() + 3_000_000).toISOString(),

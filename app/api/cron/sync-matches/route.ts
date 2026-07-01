@@ -101,6 +101,8 @@ export async function GET(request: Request) {
       away_score: f.goals.away ?? f.score.fulltime.away,
       group_name: groupName,
       penalty_winner: penaltyWinner,
+      penalty_home: pen?.home ?? null,
+      penalty_away: pen?.away ?? null,
       updated_at: nowIso,
     }
   })

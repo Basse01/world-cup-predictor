@@ -32,6 +32,8 @@ function mk(
     home_score: opts.home_score ?? null,
     away_score: opts.away_score ?? null,
     penalty_winner: opts.penalty_winner ?? null,
+    penalty_home: opts.penalty_home ?? null,
+    penalty_away: opts.penalty_away ?? null,
     group_name: null,
     lock_at: opts.lock_at ?? SOON,
     elapsed_minutes: opts.elapsed_minutes ?? null,
@@ -44,8 +46,11 @@ function fin(stage: Stage, home: string, away: string, hs: number, as: number): 
 }
 
 // A finished knockout match that ended level and was settled on penalties.
-function pens(stage: Stage, home: string, away: string, hs: number, as: number, winner: 'home' | 'away'): Match {
-  return mk(stage, home, away, { status: 'finished', home_score: hs, away_score: as, penalty_winner: winner, lock_at: PAST })
+function pens(stage: Stage, home: string, away: string, hs: number, as: number, winner: 'home' | 'away', ph: number, pa: number): Match {
+  return mk(stage, home, away, {
+    status: 'finished', home_score: hs, away_score: as,
+    penalty_winner: winner, penalty_home: ph, penalty_away: pa, lock_at: PAST,
+  })
 }
 
 // ── Round of 32 — all played ────────────────────────────────────────────────
@@ -62,7 +67,7 @@ const R32: Match[] = [
   fin('round_of_32', 'Belgium', 'Croatia', 0, 1),
   fin('round_of_32', 'Italy', 'Egypt', 2, 0),
   fin('round_of_32', 'Colombia', 'Denmark', 1, 2),
-  pens('round_of_32', 'Sweden', 'Poland', 2, 2, 'home'), // level after ET, Sweden win on penalties
+  pens('round_of_32', 'Sweden', 'Poland', 2, 2, 'home', 5, 4), // level after ET, Sweden win 5–4 on penalties
   fin('round_of_32', 'Norway', 'Austria', 2, 1),
   fin('round_of_32', 'Canada', 'Qatar', 1, 0),
   fin('round_of_32', 'Australia', 'Serbia', 0, 2),

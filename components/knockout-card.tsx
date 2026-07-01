@@ -125,6 +125,13 @@ export default function KnockoutCard({ match, prediction, preview, onPickChange 
               {finished ? `${match.home_score}–${match.away_score}` : '–'}
             </div>
             {finished && <div className="text-[10px] text-white/40 uppercase tracking-widest">Facit</div>}
+            {finished && match.penalty_winner && (
+              <div className="mt-1 text-[10px] font-display tracking-wide text-wc-blue">
+                {match.penalty_home != null && match.penalty_away != null
+                  ? `Straffar ${match.penalty_home}–${match.penalty_away}`
+                  : 'Avgjort på straffar'}
+              </div>
+            )}
           </div>
           <div className="flex flex-col items-center gap-1.5 w-24">
             <Flag url={away.flagUrl} dim={finished && realWin === 'home'} />
