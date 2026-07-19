@@ -243,10 +243,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                 const pts = pred.points_awarded ?? 0
                 const correct = isFinished && pts > 0
 
+                const winnerTeam = pred.winner_pick === 'home' ? m.home_team : pred.winner_pick === 'away' ? m.away_team : null
                 const pickBadge = isGroup
                   ? pred.pick
                   : pred.home_score != null && pred.away_score != null
-                    ? `${pred.home_score}–${pred.away_score}`
+                    ? `${pred.home_score}–${pred.away_score}${winnerTeam ? ` ${winnerTeam.slice(0, 3).toUpperCase()}` : ''}`
                     : '—'
 
                 const pickColor = isFinished
@@ -280,8 +281,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                       <span className={`text-xs font-display px-2 py-0.5 rounded-lg ${pickColor}`}>
                         {pickBadge}
                       </span>
-                      {/* Actual result */}
-                      {isFinished && m.home_score != null && (
+                      {/* Actual result — also mid-match while live */}
+                      {(isFinished || isLive) && m.home_score != null && (
                         <span className="text-xs text-white/50 font-display w-8 text-center">
                           {m.home_score}–{m.away_score}
                         </span>

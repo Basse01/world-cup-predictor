@@ -172,7 +172,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             <span className="text-wc-light-gray text-sm font-display">
               {myPred.pick
                 ? myPred.pick === '1' ? match.home_team : myPred.pick === '2' ? match.away_team : 'Oavgjort'
-                : `${myPred.home_score ?? '?'} – ${myPred.away_score ?? '?'}`}
+                : `${myPred.home_score ?? '?'} – ${myPred.away_score ?? '?'} · ${myPred.winner_pick === 'home' ? match.home_team : match.away_team}`}
             </span>
             {myPred.points_awarded != null && (
               <span className={`font-display text-lg ${myPred.points_awarded > 0 ? 'text-wc-green' : 'text-white/50'}`}>
