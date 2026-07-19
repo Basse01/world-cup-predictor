@@ -77,6 +77,7 @@ export interface BonusType {
   label: string
   points: number
   locked_at: string | null
+  answer: string | null
 }
 
 export interface MatchEvent {

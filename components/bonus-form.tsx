@@ -65,6 +65,8 @@ export default function BonusForm({
 
   // — Read-only state (already submitted or type is locked) —
   if (isReadOnly) {
+    // A question is settled once the admin has entered its facit
+    const settled = bonusType.answer != null
     return (
       <div className="bg-[#111] rounded-xl p-4 border border-[#252525]">
         <div className="flex justify-between items-center mb-3">
@@ -76,6 +78,8 @@ export default function BonusForm({
           </div>
           {earnedPoints > 0 ? (
             <span className="text-xs font-display text-wc-green">+{earnedPoints}p ✓</span>
+          ) : settled ? (
+            <span className="text-xs font-display text-white/30">0p</span>
           ) : expectedPoints ? (
             <span className="text-xs font-display text-[#888]">+{expectedPoints}p</span>
           ) : null}
@@ -87,6 +91,9 @@ export default function BonusForm({
           </span>
           <span className="text-[#444] text-sm flex-shrink-0">🔒</span>
         </div>
+        {settled && earnedPoints === 0 && (
+          <p className="text-[11px] text-white/40 mt-2">Rätt svar: {bonusType.answer}</p>
+        )}
       </div>
     )
   }

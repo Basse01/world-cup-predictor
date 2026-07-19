@@ -198,19 +198,29 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
             </div>
             <div className="divide-y divide-[#252525]">
               {bonusPreds.map(b => {
-                const label = (bonusTypes ?? []).find(bt => bt.type === b.type)?.label ?? b.type
+                const bonusType = (bonusTypes ?? []).find(bt => bt.type === b.type)
+                const label = bonusType?.label ?? b.type
                 const earnedPoints = b.points_awarded ?? 0
+                // A question is settled once the admin has entered its facit
+                const settled = bonusType?.answer != null
                 const expectedPoints =
                   (bonusOptions ?? []).find(bo => bo.type === b.type && bo.value === b.value)?.points
-                  ?? (bonusTypes ?? []).find(bt => bt.type === b.type)?.points
+                  ?? bonusType?.points
                   ?? null
 
                 return (
                   <div key={b.type} className="px-5 py-3.5 flex items-center justify-between gap-3">
-                    <BonusInfo type={b.type} label={label} value={b.value} />
+                    <BonusInfo
+                      type={b.type}
+                      label={label}
+                      value={b.value}
+                      facit={settled && earnedPoints === 0 ? bonusType!.answer : null}
+                    />
                     <div className="text-right">
                       {earnedPoints > 0 ? (
                         <span className="text-wc-green font-display text-sm">+{earnedPoints}p ✓</span>
+                      ) : settled ? (
+                        <span className="text-white/30 font-display text-sm">0p</span>
                       ) : expectedPoints ? (
                         <span className="text-white/50 font-display text-sm">+{expectedPoints}p</span>
                       ) : null}

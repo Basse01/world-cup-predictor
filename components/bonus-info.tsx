@@ -18,10 +18,12 @@ export default function BonusInfo({
   type,
   label,
   value,
+  facit,
 }: {
   type: string
   label: string
   value: string | null
+  facit?: string | null
 }) {
   const [open, setOpen] = useState(false)
   const text = BONUS_INFO[type]
@@ -43,6 +45,9 @@ export default function BonusInfo({
         )}
       </div>
       <div className="text-wc-light-gray font-medium">{value || '—'}</div>
+      {facit && (
+        <div className="text-[11px] text-white/40 mt-0.5">Rätt svar: {facit}</div>
+      )}
       {open && text && (
         <p className="mt-1.5 text-xs text-white/45 leading-relaxed max-w-[42ch]">{text}</p>
       )}
