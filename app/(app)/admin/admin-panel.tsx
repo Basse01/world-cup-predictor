@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 interface AdminProps {
   profiles: { id: string; display_name: string; paid: boolean }[]
-  matches: { id: string; home_team: string; away_team: string; kickoff_at: string; home_score: number | null; away_score: number | null; status: string }[]
+  matches: { id: string; home_team: string; away_team: string; kickoff_at: string; home_score: number | null; away_score: number | null; status: string; stage: string; penalty_winner: 'home' | 'away' | null }[]
   bonusTypes: { type: string; label: string; answer: string | null }[]
 }
 
@@ -83,39 +83,78 @@ function MatchOverride({ match }: { match: AdminProps['matches'][0] }) {
   const router = useRouter()
   const [home, setHome] = useState(match.home_score?.toString() ?? '')
   const [away, setAway] = useState(match.away_score?.toString() ?? '')
+  const [penaltyWinner, setPenaltyWinner] = useState<'home' | 'away' | null>(match.penalty_winner)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const h = parseInt(home)
+  const a = parseInt(away)
+  const isDrawnKnockout = match.stage !== 'group' && !isNaN(h) && !isNaN(a) && h === a
 
   async function save() {
-    const h = parseInt(home)
-    const a = parseInt(away)
     if (isNaN(h) || isNaN(a) || h < 0 || a < 0) return
+    if (isDrawnKnockout && !penaltyWinner) {
+      setError('Välj straffvinnare')
+      return
+    }
+    setError(null)
     setSaving(true)
-    await fetch('/api/admin/override', {
+    const res = await fetch('/api/admin/override', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ match_id: match.id, home_score: h, away_score: a }),
+      body: JSON.stringify({
+        match_id: match.id,
+        home_score: h,
+        away_score: a,
+        penalty_winner: isDrawnKnockout ? penaltyWinner : null,
+      }),
     })
     setSaving(false)
+    if (!res.ok) {
+      const data = await res.json().catch(() => null)
+      setError(data?.error ?? 'Något gick fel')
+      return
+    }
     router.refresh()
   }
 
   return (
-    <div className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex items-center gap-3">
-      <span className="text-wc-light-gray text-sm flex-1">
-        {match.home_team} vs {match.away_team}
-        <span className="ml-2 text-xs text-white/50">
-          {new Date(match.kickoff_at).toLocaleDateString('sv-SE')}
+    <div className="bg-[#1a1a1a] rounded-lg px-4 py-3">
+      <div className="flex items-center gap-3">
+        <span className="text-wc-light-gray text-sm flex-1">
+          {match.home_team} vs {match.away_team}
+          <span className="ml-2 text-xs text-white/50">
+            {new Date(match.kickoff_at).toLocaleDateString('sv-SE')}
+          </span>
         </span>
-      </span>
-      <input type="number" inputMode="numeric" min={0} max={20} value={home} onChange={e => setHome(e.target.value)}
-        className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
-      <span className="text-white/50">–</span>
-      <input type="number" inputMode="numeric" min={0} max={20} value={away} onChange={e => setAway(e.target.value)}
-        className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
-      <button onClick={save} disabled={saving}
-        className="bg-wc-blue text-white text-xs px-3 py-1.5 rounded transition-colors hover:bg-blue-800 disabled:opacity-50">
-        {saving ? '...' : 'Spara'}
-      </button>
+        <input type="number" inputMode="numeric" min={0} max={20} value={home} onChange={e => setHome(e.target.value)}
+          className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
+        <span className="text-white/50">–</span>
+        <input type="number" inputMode="numeric" min={0} max={20} value={away} onChange={e => setAway(e.target.value)}
+          className="w-12 text-center bg-[#111] border border-wc-dark-gray rounded px-2 py-2.5 min-h-[44px] text-sm text-wc-light-gray" />
+        <button onClick={save} disabled={saving}
+          className="bg-wc-blue text-white text-xs px-3 py-1.5 rounded transition-colors hover:bg-blue-800 disabled:opacity-50">
+          {saving ? '...' : 'Spara'}
+        </button>
+      </div>
+      {isDrawnKnockout && (
+        <div className="mt-3 flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-white/50">Straffvinnare:</span>
+          {(['home', 'away'] as const).map(side => (
+            <button
+              key={side}
+              onClick={() => { setPenaltyWinner(side); setError(null) }}
+              className={`px-3 py-2 min-h-[44px] rounded text-xs font-medium transition-colors
+                ${penaltyWinner === side
+                  ? 'bg-wc-green/20 text-wc-green border border-wc-green/40'
+                  : 'bg-[#111] text-white/60 border border-wc-dark-gray hover:text-wc-light-gray'}`}
+            >
+              {side === 'home' ? match.home_team : match.away_team}
+            </button>
+          ))}
+        </div>
+      )}
+      {error && <p className="mt-2 text-xs text-wc-red">{error}</p>}
     </div>
   )
 }

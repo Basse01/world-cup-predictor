@@ -6,21 +6,28 @@ export default async function StatsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: goalEvents }, { count: totalGoals }] = await Promise.all([
+  const [{ data: goalEventsRaw }, { data: finishedMatches }] = await Promise.all([
     supabase
       .from('match_events')
-      .select('player_name, player_id, team_name, team_logo')
+      .select('player_name, player_id, team_name, team_logo, comments')
       .eq('type', 'Goal')
       .neq('detail', 'Own Goal')
       .neq('detail', 'Missed Penalty')
       .not('player_name', 'is', null),
     supabase
-      .from('match_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('type', 'Goal')
-      .neq('detail', 'Own Goal')
-      .neq('detail', 'Missed Penalty'),
+      .from('matches')
+      .select('home_score, away_score')
+      .eq('status', 'finished'),
   ])
+
+  // Shootout kicks are events of type Goal but don't count as match goals for
+  // anyone. Filtered in JS — a .neq() on `comments` would drop NULL rows too.
+  const goalEvents = (goalEventsRaw ?? []).filter(e => e.comments !== 'Penalty Shootout')
+
+  // Total from match scores, not events — events have API-era duplicates
+  // (VAR-disallowed goals) and gaps (manually entered results have no events).
+  const totalGoals = (finishedMatches ?? []).reduce(
+    (sum, m) => sum + (m.home_score ?? 0) + (m.away_score ?? 0), 0)
 
   // Aggregate goals per player in JS (WC has <500 goal events).
   // Group by stable api-football player_id when present — player NAMES vary between
