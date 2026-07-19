@@ -21,10 +21,14 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
   const { id } = await params
 
-  const [{ data: match }, { data: events }, { data: myPred }] = await Promise.all([
+  const [{ data: match }, { data: events }, { data: myPred }, { data: allPreds }, { data: profiles }] = await Promise.all([
     supabase.from('matches').select('*').eq('id', id).single(),
     supabase.from('match_events').select('*').eq('match_id', id).order('elapsed').order('extra_time'),
     supabase.from('predictions').select('*').eq('match_id', id).eq('user_id', user.id).maybeSingle(),
+    supabase.from('predictions')
+      .select('user_id, pick, home_score, away_score, winner_pick, points_awarded')
+      .eq('match_id', id),
+    supabase.from('profiles').select('id, display_name'),
   ])
 
   if (!match) notFound()
@@ -32,6 +36,23 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const kickoff = new Date(match.kickoff_at)
   const isLive = match.status === 'live'
   const isFinished = match.status === 'finished'
+
+  // Everyone's tips are secret until the match locks — after that they're
+  // frozen, so showing them spoils nothing.
+  const isTipsLocked = new Date(match.lock_at) <= new Date()
+  const nameById = new Map((profiles ?? []).map((p: { id: string; display_name: string }) => [p.id, p.display_name]))
+  const allTips = (allPreds ?? [])
+    .map(p => ({
+      ...p,
+      name: nameById.get(p.user_id) ?? 'Okänd',
+      tipLabel: p.pick
+        ? p.pick === '1' ? match.home_team : p.pick === '2' ? match.away_team : 'Kryss'
+        : `${p.home_score ?? '?'}–${p.away_score ?? '?'} · ${p.winner_pick === 'home' ? match.home_team : match.away_team}`,
+    }))
+    .sort((a, b) =>
+      (a.winner_pick ?? a.pick ?? '').localeCompare(b.winner_pick ?? b.pick ?? '') ||
+      a.name.localeCompare(b.name, 'sv')
+    )
 
   const goalEvents = (events ?? []).filter((e: MatchEvent) =>
     e.type === 'Goal' && e.detail !== 'Missed Penalty'
@@ -158,6 +179,40 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                 {myPred.points_awarded > 0 ? `+${myPred.points_awarded}p` : '0p'}
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Everyone's tips — visible once the match is locked */}
+      {isTipsLocked && allTips.length > 0 && (
+        <div className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#2a2a2a]">
+            <h2 className="font-display text-sm uppercase tracking-widest text-white/50">
+              Alla tips <span className="text-white/40">({allTips.length})</span>
+            </h2>
+          </div>
+          <div className="divide-y divide-[#252525]">
+            {allTips.map(t => {
+              const pts = t.points_awarded ?? 0
+              return (
+                <div key={t.user_id} className="px-5 py-3 flex items-center justify-between gap-3">
+                  <Link
+                    href={`/profile/${t.user_id}`}
+                    className="text-sm text-wc-light-gray truncate min-h-[44px] flex items-center flex-1"
+                  >
+                    {t.name}
+                  </Link>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-sm font-display text-wc-light-gray">{t.tipLabel}</span>
+                    {isFinished && (
+                      <span className={`text-xs font-display font-bold w-9 text-right ${pts > 0 ? 'text-wc-green' : 'text-white/30'}`}>
+                        {pts > 0 ? `+${pts}p` : '0p'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
