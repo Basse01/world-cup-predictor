@@ -13,7 +13,7 @@ export default async function AdminPage() {
 
   const [{ data: profiles }, { data: matches }, { data: bonusTypes }] = await Promise.all([
     supabase.from('profiles').select('id, display_name, paid').order('display_name'),
-    supabase.from('matches').select('id, home_team, away_team, kickoff_at, home_score, away_score, status, stage, penalty_winner')
+    supabase.from('matches').select('id, home_team, away_team, kickoff_at, home_score, away_score, status')
       .order('kickoff_at'),
     supabase.from('bonus_types').select('*'),
   ])
