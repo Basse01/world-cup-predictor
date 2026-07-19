@@ -12,7 +12,7 @@ export function calcGroupPoints(
 
 // Contrarian "mot strömmen" pot for a correct knockout winner pick.
 // 2 base + up to 8 for the share of tippers who took the OTHER team.
-// Mirrors calculate_match_points (migration 019). Server is the source of truth.
+// Mirrors calculate_match_points (migration 022). Server is the source of truth.
 export function knockoutPot(totalTippers: number, sameWinnerCount: number): number {
   if (totalTippers <= 0) return 2
   const others = Math.max(0, totalTippers - sameWinnerCount)
@@ -29,9 +29,9 @@ export function calcKnockoutPoints(args: {
   totalTippers: number // # who tipped this match
   sameWinnerCount: number // # who picked the advancing team
 }): number {
-  if (args.winnerPick !== args.actualWinner) return 0
-  const pot = knockoutPot(args.totalTippers, args.sameWinnerCount)
   const exact = args.guessHome === args.actualHome && args.guessAway === args.actualAway
+  if (args.winnerPick !== args.actualWinner) return exact ? 5 : 0
+  const pot = knockoutPot(args.totalTippers, args.sameWinnerCount)
   return exact ? pot + 5 : pot
 }
 

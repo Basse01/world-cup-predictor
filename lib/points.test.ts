@@ -37,8 +37,13 @@ describe('calcKnockoutPoints (contrarian pot + exact bonus)', () => {
     expect(calcKnockoutPoints({ ...win, guessHome: 2, guessAway: 1, totalTippers: 18, sameWinnerCount: 1 })).toBe(15)
   })
 
-  it('wrong winner → 0p', () => {
-    expect(calcKnockoutPoints({ ...win, winnerPick: 'away', guessHome: 2, guessAway: 1, totalTippers: 18, sameWinnerCount: 9 })).toBe(0)
+  it('wrong winner, wrong score → 0p', () => {
+    expect(calcKnockoutPoints({ ...win, winnerPick: 'away', guessHome: 0, guessAway: 0, totalTippers: 18, sameWinnerCount: 9 })).toBe(0)
+  })
+
+  it('wrong winner, exact score → 5p flat (no pot)', () => {
+    // Picked away to advance, but nailed the 2-1 scoreline that home actually won by.
+    expect(calcKnockoutPoints({ ...win, winnerPick: 'away', guessHome: 2, guessAway: 1, totalTippers: 18, sameWinnerCount: 9 })).toBe(5)
   })
 
   it('penalty advance: tied score, picked the advancer → pot only', () => {
@@ -47,6 +52,15 @@ describe('calcKnockoutPoints (contrarian pot + exact bonus)', () => {
       winnerPick: 'home', actualWinner: 'home', actualHome: 1, actualAway: 1,
       guessHome: 0, guessAway: 0, totalTippers: 18, sameWinnerCount: 9,
     })).toBe(6)
+  })
+
+  it('penalty advance: tied score, picked the WRONG advancer but nailed 1-1 → 5p flat', () => {
+    // Australia–Egypt case: 1-1 after ET, Egypt (away) advanced on penalties.
+    // Tipper guessed 1-1 exactly but picked home (Australia) to advance.
+    expect(calcKnockoutPoints({
+      winnerPick: 'home', actualWinner: 'away', actualHome: 1, actualAway: 1,
+      guessHome: 1, guessAway: 1, totalTippers: 18, sameWinnerCount: 9,
+    })).toBe(5)
   })
 })
 
