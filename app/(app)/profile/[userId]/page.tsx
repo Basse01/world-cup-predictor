@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import BonusForm from '@/components/bonus-form'
+import BonusInfo from '@/components/bonus-info'
 import BackButton from '@/components/back-button'
 import NotificationToggle from '@/components/notification-toggle'
 import DisplayNameForm from '@/components/display-name-form'
@@ -205,11 +206,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userId
                   ?? null
 
                 return (
-                  <div key={b.type} className="px-5 py-3.5 flex items-center justify-between">
-                    <div>
-                      <div className="text-xs text-white/50 mb-0.5">{label}</div>
-                      <div className="text-wc-light-gray font-medium">{b.value || '—'}</div>
-                    </div>
+                  <div key={b.type} className="px-5 py-3.5 flex items-center justify-between gap-3">
+                    <BonusInfo type={b.type} label={label} value={b.value} />
                     <div className="text-right">
                       {earnedPoints > 0 ? (
                         <span className="text-wc-green font-display text-sm">+{earnedPoints}p ✓</span>

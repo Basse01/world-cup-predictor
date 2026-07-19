@@ -1,6 +1,8 @@
 'use client'
 import { useState } from 'react'
 import type { BonusType, BonusPrediction, BonusOption } from '@/lib/types'
+import { BONUS_INFO } from '@/lib/bonus-info'
+import { InfoIcon } from '@/components/bonus-info'
 
 export default function BonusForm({
   bonusType,
@@ -20,6 +22,23 @@ export default function BonusForm({
   const [value, setValue] = useState(initialValue)
   const [selectedPoints, setSelectedPoints] = useState<number | null>(initialPoints)
   const [saving, setSaving] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
+
+  const infoText = BONUS_INFO[bonusType.type]
+  const infoButton = infoText ? (
+    <button
+      type="button"
+      onClick={() => setShowInfo(o => !o)}
+      aria-expanded={showInfo}
+      aria-label={`Vad gäller för ${bonusType.label}?`}
+      className={`p-3 -m-3 ml-0 transition-colors ${showInfo ? 'text-wc-blue' : 'text-white/40 hover:text-white/70 active:text-white/70'}`}
+    >
+      <InfoIcon />
+    </button>
+  ) : null
+  const infoPanel = showInfo && infoText ? (
+    <p className="text-xs text-white/45 leading-relaxed mb-3">{infoText}</p>
+  ) : null
 
   const isLocked = bonusType.locked_at ? new Date(bonusType.locked_at) <= new Date() : false
   const isReadOnly = isLocked || !!existing?.value
@@ -49,15 +68,19 @@ export default function BonusForm({
     return (
       <div className="bg-[#111] rounded-xl p-4 border border-[#252525]">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide">
-            {bonusType.label}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide">
+              {bonusType.label}
+            </h3>
+            {infoButton}
+          </div>
           {earnedPoints > 0 ? (
             <span className="text-xs font-display text-wc-green">+{earnedPoints}p ✓</span>
           ) : expectedPoints ? (
             <span className="text-xs font-display text-[#888]">+{expectedPoints}p</span>
           ) : null}
         </div>
+        {infoPanel}
         <div className="bg-[#1a1a1a] rounded-lg px-4 py-3 flex items-center justify-between gap-2">
           <span className={`text-base ${value ? 'text-wc-light-gray' : 'text-[#555] italic'}`}>
             {value || 'Ej valt'}
@@ -72,13 +95,18 @@ export default function BonusForm({
   return (
     <div className="bg-[#111] rounded-xl p-4 border border-[#252525]">
       <div className="flex justify-between items-center mb-1">
-        <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide">
-          {bonusType.label}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-display text-base text-wc-light-gray uppercase tracking-wide">
+            {bonusType.label}
+          </h3>
+          {infoButton}
+        </div>
         <span className="text-xs font-display text-[#888]">
           +{selectedPoints ?? bonusType.points}p
         </span>
       </div>
+
+      {infoPanel}
 
       {hasOptions && (
         <p className="text-xs text-[#888] mb-3">
