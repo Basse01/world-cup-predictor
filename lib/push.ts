@@ -2,19 +2,40 @@ import 'server-only'
 import webpush from 'web-push'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const vapidSubject = process.env.VAPID_SUBJECT ?? ''
-webpush.setVapidDetails(
-  vapidSubject.startsWith('mailto:') ? vapidSubject : `mailto:${vapidSubject}`,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
+// Configured on first use, not at import: `next build` imports every route, and
+// a missing key must disable push rather than fail the build or crash a route.
+let vapidReady: boolean | null = null
+
+function ensureVapid(): boolean {
+  if (vapidReady !== null) return vapidReady
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const privateKey = process.env.VAPID_PRIVATE_KEY
+  const subject = process.env.VAPID_SUBJECT
+  if (!publicKey || !privateKey || !subject) {
+    console.warn('[push] VAPID keys not configured — push notifications disabled')
+    vapidReady = false
+    return false
+  }
+  try {
+    webpush.setVapidDetails(
+      /^(mailto|https):/.test(subject) ? subject : `mailto:${subject}`,
+      publicKey,
+      privateKey
+    )
+    vapidReady = true
+  } catch (err) {
+    console.error('[push] invalid VAPID configuration — push notifications disabled:', err)
+    vapidReady = false
+  }
+  return vapidReady
+}
 
 // Returns user IDs whose push was accepted by the push service (HTTP 2xx)
 export async function sendPushToUsers(
   userIds: string[],
   payload: { title: string; body: string; url?: string }
 ): Promise<string[]> {
-  if (userIds.length === 0) return []
+  if (userIds.length === 0 || !ensureVapid()) return []
 
   const supabase = createAdminClient()
   const { data: subs } = await supabase

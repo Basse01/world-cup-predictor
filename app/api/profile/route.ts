@@ -1,22 +1,17 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { jsonError, readJsonObject, requireUser } from '@/lib/api'
+import { trimmedString } from '@/lib/validate'
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireUser()
+  if (auth.response) return auth.response
+  const { supabase, user } = auth
 
-  let body: { display_name?: string }
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
+  const body = await readJsonObject(request)
+  if (!body) return jsonError('Body must be a JSON object', 400)
 
-  const displayName = body.display_name?.trim()
-  if (!displayName || displayName.length < 1 || displayName.length > 20) {
-    return NextResponse.json({ error: 'Smeknamn måste vara 1–20 tecken' }, { status: 400 })
-  }
+  const displayName = trimmedString(body.display_name, 20)
+  if (!displayName) return jsonError('Smeknamn måste vara 1–20 tecken', 400)
 
   const { error } = await supabase
     .from('profiles')

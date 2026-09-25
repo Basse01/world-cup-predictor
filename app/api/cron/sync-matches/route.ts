@@ -170,7 +170,8 @@ export async function GET(request: Request) {
   }
 
   // Only calculate points for finished matches that haven't been processed yet.
-  // Admin override calls calculate_match_points directly and is unaffected.
+  // Admin override scores directly and sets points_calculated_at itself.
+  let pointsCalculated = 0
   const { data: unprocessedFinished } = await supabase
     .from('matches')
     .select('id')
@@ -190,15 +191,19 @@ export async function GET(request: Request) {
       console.error('[sync-matches] RPC errors:', rpcErrors)
     }
 
-    // Mark successfully processed matches so we don't re-run next cron
-    const successIds = unprocessedFinished
-      .filter((_, i) => !rpcResults[i].error)
+    // Only mark matches the function actually scored. It returns false for a
+    // tied knockout still waiting for the shootout winner — those stay
+    // unmarked so the next run scores them once penalty_winner arrives.
+    const scoredIds = unprocessedFinished
+      .filter((_, i) => !rpcResults[i].error && rpcResults[i].data === true)
       .map(m => m.id)
-    if (successIds.length > 0) {
-      await supabase
+    pointsCalculated = scoredIds.length
+    if (scoredIds.length > 0) {
+      const { error: markError } = await supabase
         .from('matches')
         .update({ points_calculated_at: nowIso })
-        .in('id', successIds)
+        .in('id', scoredIds)
+      if (markError) console.error('[sync-matches] failed to set points_calculated_at:', markError.message)
     }
   }
 
@@ -260,6 +265,7 @@ export async function GET(request: Request) {
     synced: matchesToUpsert.length,
     groups_inferred: teamGroupMap.size,
     points_processed: unprocessedFinished?.length ?? 0,
+    points_calculated: pointsCalculated,
     events_synced: eventsSynced,
     reminders_sent: remindersent,
     match_window: isMatchWindow,

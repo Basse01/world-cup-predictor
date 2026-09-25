@@ -205,13 +205,11 @@ export default function OnboardingForm({ existing, bonusTypes }: Props) {
     setSaving(true)
     await Promise.all(
       bonusTypes.map(b => {
-        const body: Record<string, unknown> = { type: b.type, value: values[b.type].trim() }
-        const pts = selectedPoints[b.type]
-        if (pts != null) body.locked_points = pts
+        // locked_points is computed by the server from the chosen option.
         return fetch('/api/bonus', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ type: b.type, value: values[b.type].trim() }),
         })
       })
     )
