@@ -149,6 +149,17 @@ so the next run picks it up automatically.
 On a paid Vercel plan the same schedule can live in `vercel.json` instead; just
 make sure only one scheduler calls each endpoint.
 
+## Deployment
+
+Hosted on Vercel via its GitHub integration. **Automatic deployments are
+currently turned off** (`"git": { "deploymentEnabled": false }` in `vercel.json`)
+while the security migrations are pending on the live database: the new code
+expects migrations 023–025 to be applied first. To deploy again:
+
+1. Unpause the Supabase project, apply migrations `023`–`025`, and run
+   `supabase/checks/verify_security.sql` (every row `ok = true`).
+2. Remove the `git` block from `vercel.json` (or deploy manually with `vercel --prod`).
+
 ## Project structure
 
 ```

@@ -19,7 +19,7 @@ A Swedish-language FIFA World Cup 2026 prediction game. Users predict match outc
 | Database & Auth | Supabase (PostgreSQL + Auth) |
 | Styling | Tailwind CSS 4, custom theme |
 | External API | api-football.com (API Sports) — live fixture data |
-| Deployment | Vercel (Node.js runtime) |
+| Deployment | Vercel (Node.js runtime). Git auto-deploys disabled in `vercel.json` until migrations 023–025 are live — see README "Deployment" |
 | Cron | External scheduler (cron-job.org) — see README "Scheduled jobs"; `vercel.json` intentionally has none |
 | Testing | Vitest + Testing Library; DB tests on PGlite (`supabase/tests/`) |
 
