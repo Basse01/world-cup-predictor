@@ -1,3 +1,7 @@
+-- locked_points (the points a pick was worth when it was made) was originally
+-- added via the dashboard. No-op on the live database; needed on a fresh install.
+ALTER TABLE public.bonus_predictions ADD COLUMN IF NOT EXISTS locked_points integer;
+
 -- Update world_cup_winner bonus_options with points derived from actual pre-tournament odds
 -- Formula: round(log10(american_odds / 100) * 30)
 -- Source: BetMGM opening odds via Yahoo Sports (pre-tournament, before 2026-06-11)
