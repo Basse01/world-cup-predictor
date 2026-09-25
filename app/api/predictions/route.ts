@@ -1,28 +1,20 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { dbError, jsonError, readJsonObject, requireUser } from '@/lib/api'
 import { isMatchLocked } from '@/lib/points'
+import { isUuid, parseGroupPick, parseKnockoutPick } from '@/lib/validate'
 
+// The deadline is also enforced in the database (migration 025); checking it
+// here first gives a clean 403 instead of a failed write.
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireUser()
+  if (auth.response) return auth.response
+  const { supabase, user } = auth
 
-  let body: Record<string, unknown>
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
-  }
+  const body = await readJsonObject(request)
+  if (!body) return jsonError('Body must be a JSON object', 400)
 
-  const match_id = body.match_id as string | undefined
-  const pick = body.pick as string | undefined
-  const winner_pick = body.winner_pick as string | undefined
-  const home_score = body.home_score as number | undefined | null
-  const away_score = body.away_score as number | undefined | null
-
-  if (match_id == null || typeof match_id !== 'string') {
-    return NextResponse.json({ error: 'match_id required' }, { status: 400 })
-  }
+  const { match_id } = body
+  if (!isUuid(match_id)) return jsonError('match_id must be a UUID', 400)
 
   const { data: match } = await supabase
     .from('matches')
@@ -30,67 +22,38 @@ export async function POST(request: Request) {
     .eq('id', match_id)
     .single()
 
-  if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 })
+  if (!match) return jsonError('Match not found', 404)
+  if (isMatchLocked(match.lock_at)) return jsonError('Prediction locked', 403)
 
-  if (isMatchLocked(match.lock_at)) {
-    return NextResponse.json({ error: 'Prediction locked' }, { status: 403 })
-  }
-
+  let payload
   if (match.stage === 'group') {
-    if (!['1', 'X', '2'].includes(pick ?? '')) {
-      return NextResponse.json({ error: 'Invalid pick for group stage' }, { status: 400 })
-    }
+    const parsed = parseGroupPick(body)
+    if (!parsed.ok) return jsonError(parsed.error, 400)
+    payload = { user_id: user.id, match_id, ...parsed.value, home_score: null, away_score: null, winner_pick: null }
   } else {
-    if (!['home', 'away'].includes(winner_pick ?? '')) {
-      return NextResponse.json({ error: 'winner_pick required for knockout' }, { status: 400 })
-    }
-    if (home_score == null || away_score == null) {
-      return NextResponse.json({ error: 'home_score and away_score required for knockout' }, { status: 400 })
-    }
-    if (!Number.isInteger(home_score) || !Number.isInteger(away_score) || home_score < 0 || away_score < 0) {
-      return NextResponse.json({ error: 'Scores must be non-negative integers' }, { status: 400 })
-    }
-    // The result must not contradict the advancing team. A draw is allowed
-    // (penalties decide), but the picked winner can't lose in regulation.
-    if (
-      (winner_pick === 'home' && home_score < away_score) ||
-      (winner_pick === 'away' && away_score < home_score)
-    ) {
-      return NextResponse.json({ error: 'Result contradicts winner_pick' }, { status: 400 })
-    }
+    const parsed = parseKnockoutPick(body)
+    if (!parsed.ok) return jsonError(parsed.error, 400)
+    payload = { user_id: user.id, match_id, pick: null, ...parsed.value }
   }
 
-  const payload =
-    match.stage === 'group'
-      ? { user_id: user.id, match_id, pick: pick!, home_score: null, away_score: null, winner_pick: null }
-      : { user_id: user.id, match_id, pick: null, home_score: home_score!, away_score: away_score!, winner_pick: winner_pick! }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from('predictions')
-    .upsert(payload as any, { onConflict: 'user_id,match_id' })
+    .upsert(payload, { onConflict: 'user_id,match_id' })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
+  if (error) return dbError('predictions POST', error)
   return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireUser()
+  if (auth.response) return auth.response
+  const { supabase, user } = auth
 
-  let body: Record<string, unknown>
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
-  }
+  const body = await readJsonObject(request)
+  if (!body) return jsonError('Body must be a JSON object', 400)
 
-  const match_id = body.match_id as string | undefined
-  if (!match_id || typeof match_id !== 'string') {
-    return NextResponse.json({ error: 'match_id required' }, { status: 400 })
-  }
+  const { match_id } = body
+  if (!isUuid(match_id)) return jsonError('match_id must be a UUID', 400)
 
   const { data: match } = await supabase
     .from('matches')
@@ -98,11 +61,8 @@ export async function DELETE(request: Request) {
     .eq('id', match_id)
     .single()
 
-  if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 })
-
-  if (isMatchLocked(match.lock_at)) {
-    return NextResponse.json({ error: 'Prediction locked' }, { status: 403 })
-  }
+  if (!match) return jsonError('Match not found', 404)
+  if (isMatchLocked(match.lock_at)) return jsonError('Prediction locked', 403)
 
   const { error } = await supabase
     .from('predictions')
@@ -110,10 +70,6 @@ export async function DELETE(request: Request) {
     .eq('user_id', user.id)
     .eq('match_id', match_id)
 
-  if (error) {
-    console.error('[predictions DELETE] supabase error:', JSON.stringify(error))
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
+  if (error) return dbError('predictions DELETE', error)
   return NextResponse.json({ ok: true })
 }

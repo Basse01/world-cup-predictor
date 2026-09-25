@@ -1,43 +1,45 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { dbError, jsonError, readJsonObject, requireUser } from '@/lib/api'
+import { trimmedString } from '@/lib/validate'
 
+// locked_points is never taken from the client: the database computes it from
+// the chosen option (migration 025) and we return it.
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireUser()
+  if (auth.response) return auth.response
+  const { supabase, user } = auth
 
-  let body: Record<string, unknown>
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  const body = await readJsonObject(request)
+  if (!body) return jsonError('Body must be a JSON object', 400)
+
+  const type = trimmedString(body.type, 64)
+  const value = trimmedString(body.value, 100)
+  if (!type || !value) return jsonError('type and value must be non-empty strings (value max 100 chars)', 400)
+
+  const [{ data: bonusType }, { data: options }] = await Promise.all([
+    supabase.from('bonus_types').select('locked_at').eq('type', type).maybeSingle(),
+    supabase.from('bonus_options').select('value').eq('type', type),
+  ])
+
+  if (!bonusType) return jsonError('Unknown bonus type', 400)
+  if (bonusType.locked_at && new Date(bonusType.locked_at) <= new Date()) {
+    return jsonError('Bonus locked', 403)
   }
 
-  const type = body.type as string | undefined
-  const value = (body.value as string | undefined)?.trim()
-  const lockedPoints = body.locked_points as number | undefined
-
-  if (!type || !value) {
-    return NextResponse.json({ error: 'type and value required' }, { status: 400 })
+  // Dropdown bonuses only accept one of their options (matched like the award).
+  let canonicalValue = value
+  if (options && options.length > 0) {
+    const match = options.find(o => o.value.trim().toLowerCase() === value.toLowerCase())
+    if (!match) return jsonError('Invalid option for this bonus', 400)
+    canonicalValue = match.value
   }
 
-  const { data: bonusType } = await supabase
-    .from('bonus_types')
-    .select('locked_at')
-    .eq('type', type)
+  const { data, error } = await supabase
+    .from('bonus_predictions')
+    .upsert({ user_id: user.id, type, value: canonicalValue }, { onConflict: 'user_id,type' })
+    .select('locked_points')
     .single()
 
-  if (bonusType?.locked_at && new Date(bonusType.locked_at) <= new Date()) {
-    return NextResponse.json({ error: 'Bonus locked' }, { status: 403 })
-  }
-
-  const row: Record<string, unknown> = { user_id: user.id, type, value }
-  if (lockedPoints != null) row.locked_points = lockedPoints
-
-  const { error } = await supabase
-    .from('bonus_predictions')
-    .upsert(row, { onConflict: 'user_id,type' })
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ ok: true })
+  if (error) return dbError('bonus POST', error)
+  return NextResponse.json({ ok: true, locked_points: data.locked_points })
 }

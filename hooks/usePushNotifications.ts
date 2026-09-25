@@ -3,6 +3,9 @@ import { useCallback, useEffect, useState } from 'react'
 
 export type PushState = 'unsupported' | 'default' | 'granted' | 'denied'
 
+// Inlined at build time; unset means push isn't configured for this deployment.
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
@@ -19,6 +22,7 @@ export function usePushNotifications() {
 
   useEffect(() => {
     if (
+      !VAPID_PUBLIC_KEY ||
       typeof window === 'undefined' ||
       !('Notification' in window) ||
       !('serviceWorker' in navigator) ||
@@ -37,7 +41,7 @@ export function usePushNotifications() {
   }, [])
 
   const subscribe = useCallback(async (): Promise<boolean> => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return false
+    if (!VAPID_PUBLIC_KEY || typeof window === 'undefined' || !('serviceWorker' in navigator)) return false
     try {
       await navigator.serviceWorker.register('/sw.js')
       const readyReg = await navigator.serviceWorker.ready
@@ -48,9 +52,7 @@ export function usePushNotifications() {
 
       const sub = await readyReg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-        ) as unknown as BufferSource,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
       })
 
       const p256dh = sub.getKey('p256dh')

@@ -54,11 +54,8 @@ export default function BonusForm({
     await fetch('/api/bonus', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: bonusType.type,
-        value,
-        ...(selectedPoints != null ? { locked_points: selectedPoints } : {}),
-      }),
+      // locked_points is computed by the server from the chosen option.
+      body: JSON.stringify({ type: bonusType.type, value }),
     })
     setSaving(false)
   }

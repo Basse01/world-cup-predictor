@@ -19,9 +19,9 @@ A Swedish-language FIFA World Cup 2026 prediction game. Users predict match outc
 | Database & Auth | Supabase (PostgreSQL + Auth) |
 | Styling | Tailwind CSS 4, custom theme |
 | External API | api-football.com (API Sports) — live fixture data |
-| Deployment | Vercel (Node.js runtime) |
-| Cron | Vercel cron — `/api/cron/sync-matches` every 5 minutes |
-| Testing | Vitest + Testing Library |
+| Deployment | Vercel (Node.js runtime). Git auto-deploys disabled in `vercel.json` until migrations 023–025 are live — see README "Deployment" |
+| Cron | External scheduler (cron-job.org) — see README "Scheduled jobs"; `vercel.json` intentionally has none |
+| Testing | Vitest + Testing Library; DB tests on PGlite (`supabase/tests/`) |
 
 ---
 
@@ -36,13 +36,13 @@ A Swedish-language FIFA World Cup 2026 prediction game. Users predict match outc
 app/          # Pages & API routes
 components/   # React components (client + server)
 lib/          # Supabase clients, types, scoring logic, API integration
-supabase/     # DB migrations
+supabase/     # migrations/ (apply in order), checks/ (live-DB verification SQL), tests/ (PGlite)
 ```
 
 **Supabase clients — use the right one:**
 - `lib/supabase/server.ts` — SSR client (server components, API routes)
 - `lib/supabase/client.ts` — browser client (client components only)
-- `lib/supabase/admin.ts` — service role (admin API routes only, bypasses RLS)
+- `lib/supabase/admin.ts` — service role (cron + admin API routes only, bypasses RLS)
 
 ---
 
@@ -50,28 +50,33 @@ supabase/     # DB migrations
 
 | Table | Purpose |
 |---|---|
-| `profiles` | Extends auth.users — display_name, paid (always true), is_admin |
+| `profiles` | Extends auth.users — display_name, paid, is_admin (paid/is_admin: service role only) |
 | `matches` | Fixtures from api-football.com — status, stage, scores, lock_at |
 | `predictions` | User picks — 1X2 for group, score+winner for knockout |
-| `bonus_predictions` | Answers to admin-created bonus questions |
+| `bonus_predictions` | Bonus answers; `locked_points` computed by a DB trigger from the chosen option |
+| `bonus_options` | Dropdown options per bonus type, each with its own points (odds-based for world_cup_winner) |
+| `match_events` | Goals/cards per match from api-football — written by the cron only |
 | `bonus_types` | Admin-configured bonus questions with points + answer |
 | `messages` | Group chat (1–500 chars) |
 
 **Views:** `standings` — aggregates total_points + rank per user.
 
-**RPC functions:**
-- `calculate_match_points(match_id)` — call after match finishes (3pts group, 5pts exact knockout, 2pts winner knockout)
-- `award_bonus_points(type, answer)` — case-insensitive match against user answers
+**RPC functions** (service role only — EXECUTE is revoked from anon/authenticated):
+- `calculate_match_points(match_id) → boolean` — scores a finished match. Returns false when there is nothing to score yet (not finished, or a tied knockout without `penalty_winner`); callers must then leave `points_calculated_at` null so the cron retries. Idempotent: re-running after a corrected result re-scores everyone.
+- `award_bonus_points(type, answer) → integer` — resets the bonus to 0 for everyone, then awards matching answers (case-insensitive). Returns the number of winners. Safe to re-run with a corrected answer — but it overwrites any manual points adjustments on that bonus.
 - `handle_new_user()` — trigger on auth signup → creates profile row
 
 ---
 
 ## Scoring Rules
 
+Source of truth: `supabase/migrations/024_scoring_functions.sql` (mirrored in `lib/points.ts` for display only).
+
 - **Group stage:** 3 points for correct 1X2 pick
-- **Knockout exact score:** 5 points
-- **Knockout correct winner only:** 2 points
-- **Bonus questions:** Admin-defined points (default 10)
+- **Knockout, correct team advances:** contrarian pot `round(2 + 8 × share who picked the other team)` → 2–10
+- **Knockout, correct team + exact score after ET (excl. penalties):** pot + 5
+- **Knockout, wrong team but exact score:** 5
+- **Bonus:** option points for dropdown bonuses (world_cup_winner 20–102 from odds), otherwise `bonus_types.points` (total_goals 25, top_scorer 10, golden_ball 10)
 
 Scoring is calculated server-side via Supabase RPC — do not reimplement in client code.
 
@@ -82,23 +87,31 @@ Scoring is calculated server-side via Supabase RPC — do not reimplement in cli
 | File | Role |
 |---|---|
 | `lib/types.ts` | All TypeScript interfaces (Match, Prediction, Standing, etc.) |
-| `lib/points.ts` | Lock-time checks, score validation |
+| `lib/points.ts` | Lock-time check, client-side mirror of the scoring rules |
+| `lib/validate.ts` | Runtime validation of API request bodies (UUIDs, scores 0–20, picks, strings) |
+| `lib/api.ts` | Route helpers: `requireUser`, `requireAdmin`, `readJsonObject`, `dbError` |
 | `lib/api-football.ts` | External API integration — fixture fetching + status mapping |
 | `app/api/cron/sync-matches/route.ts` | Cron endpoint — sync fixtures + trigger point calculation |
 | `app/api/predictions/route.ts` | POST — upsert group or knockout prediction |
 | `app/api/bonus/route.ts` | POST — upsert bonus answer |
-| `app/api/admin/` | Admin-only routes: paid, bonus-award, override |
+| `app/api/admin/` | Admin-only routes: paid, bonus-award, override, backfill-player-ids |
+| `supabase/migrations/025_lock_down_writes.sql` | Column privileges + triggers: deadlines, protected fields |
 
 ---
 
 ## Environment Variables
+
+All documented with placeholders in `.env.example`:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL        # Supabase API URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY   # Supabase anon key
 SUPABASE_SERVICE_ROLE_KEY       # Service role (server only, never expose)
 API_FOOTBALL_KEY                # API Sports key
-CRON_SECRET                     # Bearer token for cron endpoint
+CRON_SECRET                     # Bearer token for cron endpoints
+NEXT_PUBLIC_VAPID_PUBLIC_KEY    # Web push (optional — push is disabled when unset)
+VAPID_PRIVATE_KEY               # Web push (optional)
+VAPID_SUBJECT                   # Web push contact, email or https URL (optional)
 ```
 
 ---
@@ -160,11 +173,19 @@ CRON_SECRET                     # Bearer token for cron endpoint
 - Custom colors: `wc-blue`, `wc-red`, `wc-green`, `wc-black`, `wc-dark-gray`, `wc-light-gray`
 - Fonts: Anton (headings), Noto Sans (body)
 
-**Betalning sker utanför appen** — `paid` defaultar till `true`, alla användare får full access direkt vid registrering. Admin-panelen har fortfarande en paid-toggle men den påverkar inget funktionellt.
+**Betalning sker utanför appen** — `paid` är bara informativt; alla användare får full access direkt vid registrering. Admin-panelen har en paid-toggle (skrivs med service role) men den påverkar inget funktionellt.
 
-**Predictions lock 30 minutes before kickoff** — enforced by `matches.lock_at` (generated column: `kickoff_at - interval '30 minutes'`). Always check this server-side before accepting a prediction.
+**Predictions lock 1 minute before kickoff** — `matches.lock_at` is set by the `set_lock_at` trigger (`kickoff_at - interval '1 minute'`, migration 020). The API routes check it for a clean 403, and the `enforce_prediction_rules` trigger enforces it in the database for insert, update and delete.
 
-**Admin check:** Read `is_admin` from profiles; redirect non-admins before rendering the page.
+**Security — the database is the boundary.** The anon key is public, so users can call PostgREST directly. Never rely on an API route alone for a rule:
+- New user-writable columns need an explicit column GRANT in a migration (025 revokes table-wide INSERT/UPDATE).
+- Server-owned values (points, locked_points, is_admin, paid, match data) are written only with the service role.
+- New SECURITY DEFINER functions need `SET search_path = ''` and EXECUTE revoked from anon/authenticated.
+- Add a test in `supabase/tests/` for every new rule, and a row in `supabase/checks/verify_security.sql` if it should be verified on the live DB.
+
+**API input:** Validate with `lib/validate.ts` — never trust `body.x as string`. Bad input → 400, DB rule violations map to 403/400 via `dbError`, and failures are never reported as `{ ok: true }`.
+
+**Admin check:** Use `requireAdmin()` in API routes; pages read `is_admin` from profiles and redirect non-admins before rendering.
 
 **Knockout score range:** 0–20, non-negative integers.
 
@@ -181,8 +202,14 @@ CRON_SECRET                     # Bearer token for cron endpoint
 | `/tips/slutspel` | Knockout score predictions |
 | `/bonus` | Bonus questions |
 | `/leaderboard` | Full standings table |
-| `/chat` | Group chat |
+| `/tips/idag` | Today's matches |
+| `/match/[id]` | Match page — live events, everyone's tips after the lock |
+| `/profile/[userId]` | Player profile, tips and bonus outcomes |
+| `/stats` | Tournament stats, top scorers |
+| `/onboarding` | One-time bonus picks after signup |
 | `/admin` | Admin panel — paid users, bonus awards, score overrides |
+
+Chat is an overlay (`components/chat-overlay.tsx`), not a page.
 
 ---
 
@@ -190,8 +217,8 @@ CRON_SECRET                     # Bearer token for cron endpoint
 
 ```bash
 npm run dev    # Dev server
-npm run build  # Production build
-npm test       # Vitest
+npm run build  # Production build (works without VAPID keys)
+npm test       # Vitest — unit, component and DB tests (PGlite, no Docker)
 ```
 
-DB migrations are in `supabase/migrations/` — apply via Supabase CLI or dashboard.
+DB migrations are in `supabase/migrations/` — apply in filename order via the SQL editor or `psql` (see README). A fresh install is tested by `supabase/tests/`. After applying to the live DB, run `supabase/checks/verify_security.sql`.

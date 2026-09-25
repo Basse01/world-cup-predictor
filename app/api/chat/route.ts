@@ -1,24 +1,19 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { jsonError, readJsonObject, requireUser } from '@/lib/api'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUsers } from '@/lib/push'
+import { trimmedString } from '@/lib/validate'
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireUser()
+  if (auth.response) return auth.response
+  const { supabase, user } = auth
 
-  let body: { content?: string }
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
+  const body = await readJsonObject(request)
+  if (!body) return jsonError('Body must be a JSON object', 400)
 
-  const content = body.content?.trim()
-  if (!content || content.length < 1 || content.length > 500) {
-    return NextResponse.json({ error: 'content must be 1–500 characters' }, { status: 400 })
-  }
+  const content = trimmedString(body.content, 500)
+  if (!content) return jsonError('content must be 1–500 characters', 400)
 
   const { data: message, error } = await supabase
     .from('messages')

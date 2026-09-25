@@ -1,32 +1,25 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { dbError, jsonError, readJsonObject, requireAdmin } from '@/lib/api'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { isUuid } from '@/lib/validate'
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireAdmin()
+  if (auth.response) return auth.response
 
-  const { data: profile } = await supabase
-    .from('profiles').select('is_admin').eq('id', user.id).single()
-  if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const body = await readJsonObject(request)
+  if (!body) return jsonError('Body must be a JSON object', 400)
 
-  let body: Record<string, unknown>
-  try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
-  const user_id = body.user_id as string | undefined
-  const paid = body.paid as boolean | undefined
+  const { user_id, paid } = body
+  if (!isUuid(user_id)) return jsonError('user_id must be a UUID', 400)
+  if (typeof paid !== 'boolean') return jsonError('paid must be a boolean', 400)
 
-  if (!user_id || paid === undefined) {
-    return NextResponse.json({ error: 'user_id and paid required' }, { status: 400 })
-  }
-  if (typeof paid !== 'boolean') {
-    return NextResponse.json({ error: 'paid must be a boolean' }, { status: 400 })
-  }
+  // paid is not writable by the authenticated role (migration 025) — only the
+  // service role can change it, after the admin check above.
+  const { data: updated, error } = await createAdminClient()
+    .from('profiles').update({ paid }).eq('id', user_id).select('id')
 
-  const { error } = await supabase
-    .from('profiles').update({ paid }).eq('id', user_id)
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return dbError('admin/paid', error)
+  if (!updated || updated.length === 0) return jsonError('User not found', 404)
   return NextResponse.json({ ok: true })
 }

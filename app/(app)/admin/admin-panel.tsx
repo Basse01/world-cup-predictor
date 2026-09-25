@@ -8,6 +8,27 @@ interface AdminProps {
   bonusTypes: { type: string; label: string; answer: string | null }[]
 }
 
+// POSTs to an admin endpoint and alerts on failure, so a failed write is never
+// silent. Returns the JSON body on success, null on failure.
+async function postAdmin(url: string, body: unknown): Promise<Record<string, unknown> | null> {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      alert(`Misslyckades: ${data.error ?? res.statusText}`)
+      return null
+    }
+    return data
+  } catch {
+    alert('Misslyckades: nätverksfel')
+    return null
+  }
+}
+
 export default function AdminPanel({ profiles, matches, bonusTypes }: AdminProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'users' | 'matches' | 'bonus'>('users')
@@ -40,11 +61,7 @@ export default function AdminPanel({ profiles, matches, bonusTypes }: AdminProps
               <span className="text-wc-light-gray">{p.display_name}</span>
               <button
                 onClick={async () => {
-                  await fetch('/api/admin/paid', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: p.id, paid: !p.paid }),
-                  })
+                  await postAdmin('/api/admin/paid', { user_id: p.id, paid: !p.paid })
                   router.refresh()
                 }}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors
@@ -90,11 +107,10 @@ function MatchOverride({ match }: { match: AdminProps['matches'][0] }) {
     const a = parseInt(away)
     if (isNaN(h) || isNaN(a) || h < 0 || a < 0) return
     setSaving(true)
-    await fetch('/api/admin/override', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ match_id: match.id, home_score: h, away_score: a }),
-    })
+    const data = await postAdmin('/api/admin/override', { match_id: match.id, home_score: h, away_score: a })
+    if (data && data.points_calculated === false) {
+      alert(`Resultatet sparat, men poäng är inte utdelade: ${data.reason ?? 'okänd orsak'}`)
+    }
     setSaving(false)
     router.refresh()
   }
@@ -123,18 +139,14 @@ function MatchOverride({ match }: { match: AdminProps['matches'][0] }) {
 function BonusAward({ bonusType }: { bonusType: AdminProps['bonusTypes'][0] }) {
   const [answer, setAnswer] = useState(bonusType.answer ?? '')
   const [saving, setSaving] = useState(false)
-  const [done, setDone] = useState(false)
+  const [winners, setWinners] = useState<number | null>(null)
 
   async function award() {
     if (!answer.trim()) return
     setSaving(true)
-    await fetch('/api/admin/bonus-award', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: bonusType.type, answer }),
-    })
+    const data = await postAdmin('/api/admin/bonus-award', { type: bonusType.type, answer })
     setSaving(false)
-    setDone(true)
+    if (data) setWinners(typeof data.winners === 'number' ? data.winners : 0)
   }
 
   return (
@@ -143,14 +155,14 @@ function BonusAward({ bonusType }: { bonusType: AdminProps['bonusTypes'][0] }) {
       <div className="flex gap-2">
         <input
           value={answer}
-          onChange={e => { setAnswer(e.target.value); setDone(false) }}
+          onChange={e => { setAnswer(e.target.value); setWinners(null) }}
           placeholder="Rätt svar..."
           className="flex-1 bg-[#111] border border-wc-dark-gray rounded px-3 py-2 text-sm text-wc-light-gray
                      focus:outline-none focus:border-wc-blue"
         />
         <button onClick={award} disabled={saving}
           className="bg-wc-green text-white text-xs px-4 py-2 rounded transition-colors hover:bg-green-700 disabled:opacity-50">
-          {done ? '✓ Tilldelat' : saving ? '...' : 'Tilldela poäng'}
+          {winners != null ? `✓ Tilldelat (${winners} rätt)` : saving ? '...' : 'Tilldela poäng'}
         </button>
       </div>
     </div>

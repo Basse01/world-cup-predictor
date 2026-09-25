@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/api'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { fetchFixtureEvents } from '@/lib/api-football'
 
 export const runtime = 'nodejs'
@@ -12,13 +12,8 @@ export const maxDuration = 60
 // ("Kylian Mbappé" vs "K. Mbappe") and broke the skytteliga on /stats.
 // Idempotent: safe to run more than once. Run AFTER deploying the player_id changes.
 export async function POST() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: profile } = await supabase
-    .from('profiles').select('is_admin').eq('id', user.id).single()
-  if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const auth = await requireAdmin()
+  if (auth.response) return auth.response
 
   if (!process.env.API_FOOTBALL_KEY) {
     return NextResponse.json({ error: 'API_FOOTBALL_KEY not set' }, { status: 500 })
@@ -90,5 +85,5 @@ export async function POST() {
     events_written: eventsWritten,
     skipped,
     errors,
-  })
+  }, { status: errors.length === 0 ? 200 : 500 })
 }

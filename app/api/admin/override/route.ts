@@ -1,45 +1,46 @@
 import { NextResponse } from 'next/server'
+import { dbError, jsonError, readJsonObject, requireAdmin } from '@/lib/api'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { isScore, isUuid, MAX_SCORE } from '@/lib/validate'
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await requireAdmin()
+  if (auth.response) return auth.response
 
-  const { data: profile } = await supabase
-    .from('profiles').select('is_admin').eq('id', user.id).single()
-  if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const body = await readJsonObject(request)
+  if (!body) return jsonError('Body must be a JSON object', 400)
 
-  let body: Record<string, unknown>
-  try { body = await request.json() } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
-
-  const match_id = body.match_id as string | undefined
-  const home_score = body.home_score as number | undefined
-  const away_score = body.away_score as number | undefined
-
-  if (!match_id || home_score == null || away_score == null) {
-    return NextResponse.json({ error: 'match_id, home_score, away_score required' }, { status: 400 })
-  }
-  if (!Number.isInteger(home_score) || !Number.isInteger(away_score) || home_score < 0 || away_score < 0) {
-    return NextResponse.json({ error: 'Scores must be non-negative integers' }, { status: 400 })
+  const { match_id, home_score, away_score } = body
+  if (!isUuid(match_id)) return jsonError('match_id must be a UUID', 400)
+  if (!isScore(home_score) || !isScore(away_score)) {
+    return jsonError(`home_score and away_score must be integers between 0 and ${MAX_SCORE}`, 400)
   }
 
   const admin = createAdminClient()
 
-  const { error: updateError } = await admin
+  const { data: updated, error: updateError } = await admin
     .from('matches')
     .update({ home_score, away_score, status: 'finished' })
     .eq('id', match_id)
+    .select('id')
 
-  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
+  if (updateError) return dbError('admin/override update', updateError)
+  if (!updated || updated.length === 0) return jsonError('Match not found', 404)
 
-  const { error: rpcError } = await admin.rpc('calculate_match_points', { p_match_id: match_id })
-  if (rpcError) {
-    console.error('[admin/override] RPC error:', rpcError.message)
-  }
+  const { data: calculated, error: rpcError } = await admin.rpc('calculate_match_points', { p_match_id: match_id })
+  if (rpcError) return dbError('admin/override calculate_match_points', rpcError)
 
-  return NextResponse.json({ ok: true })
+  // Keep the cron in step: a tied knockout without a shootout winner isn't
+  // scored yet, so leave it unmarked and the next sync retries it.
+  const { error: markError } = await admin
+    .from('matches')
+    .update({ points_calculated_at: calculated ? new Date().toISOString() : null })
+    .eq('id', match_id)
+  if (markError) return dbError('admin/override mark', markError)
+
+  return NextResponse.json({
+    ok: true,
+    points_calculated: calculated === true,
+    ...(calculated ? {} : { reason: 'Tied knockout: waiting for the penalty shootout winner' }),
+  })
 }
